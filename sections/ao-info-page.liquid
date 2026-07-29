@@ -1,0 +1,403 @@
+{{ 'ao-base.css' | asset_url | stylesheet_tag }}
+
+{%- liquid
+  assign t = section.settings
+
+  # Title falls back to the page title so merchants only maintain it in one place.
+  assign heading = t.title_override
+  if heading == blank and page.title != blank
+    assign heading = page.title
+  endif
+
+  # Body prefers the page's own rich text; the override is for non-page templates.
+  assign body = t.body_override
+  if body == blank and page.content != blank
+    assign body = page.content
+  endif
+-%}
+
+{%- style -%}
+  #ao-info-{{ section.id }} {
+    --ao-info-bg: {{ t.background_color }};
+    --ao-info-fg: {{ t.text_color }};
+    --ao-info-accent: {{ t.accent_color }};
+    --ao-info-max-w: {{ t.content_max_width }}px;
+    --ao-info-logo-w-d: {{ t.logo_width }}px;
+    --ao-info-logo-w-m: {{ t.logo_width_mobile }}px;
+    --ao-info-tagline-d: {{ t.tagline_size }}px;
+    --ao-info-tagline-m: {{ t.tagline_size_mobile }}px;
+    --ao-info-title-d: {{ t.title_size }}px;
+    --ao-info-title-m: {{ t.title_size_mobile }}px;
+    --ao-info-body-d: {{ t.body_size }}px;
+    --ao-info-body-m: {{ t.body_size_mobile }}px;
+    --ao-info-pad-t-d: {{ t.padding_top }}px;
+    --ao-info-pad-b-d: {{ t.padding_bottom }}px;
+    --ao-info-pad-x-d: {{ t.padding_horizontal }}px;
+    --ao-info-pad-t-m: {{ t.padding_top_mobile }}px;
+    --ao-info-pad-b-m: {{ t.padding_bottom_mobile }}px;
+    --ao-info-pad-x-m: {{ t.padding_horizontal_mobile }}px;
+  }
+  {%- if t.heading_font != blank -%}
+    {{ t.heading_font | font_face: font_display: 'swap' }}
+    #ao-info-{{ section.id }} .ao-info__tagline,
+    #ao-info-{{ section.id }} .ao-info__title,
+    #ao-info-{{ section.id }} .ao-info__block-heading,
+    #ao-info-{{ section.id }} .ao-info__accordion-q {
+      font-family: {{ t.heading_font.family }}, {{ t.heading_font.fallback_families }};
+    }
+  {%- endif -%}
+  {%- if t.body_font != blank -%}
+    {{ t.body_font | font_face: font_display: 'swap' }}
+    #ao-info-{{ section.id }} { --ao-info-body-font: {{ t.body_font.family }}, {{ t.body_font.fallback_families }}; }
+  {%- endif -%}
+{%- endstyle -%}
+
+<div id="ao-info-{{ section.id }}" class="ao-info ao-info--text-{{ t.text_alignment }}">
+  <div class="ao-info__inner">
+    {%- comment -%} Masthead: logo, tagline, title, intro copy {%- endcomment -%}
+    <div class="ao-info__masthead">
+      {%- if t.logo != blank -%}
+        <div class="ao-info__logo">
+          {%- capture logo_sizes -%}{{ t.logo_width }}px{%- endcapture -%}
+          {{
+            t.logo
+            | image_url: width: 600
+            | image_tag:
+              class: 'ao-info__logo-img',
+              widths: '160, 240, 320, 480, 600',
+              sizes: logo_sizes,
+              alt: t.tagline | default: shop.name,
+              loading: 'eager'
+          }}
+        </div>
+      {%- endif -%}
+
+      {%- if t.tagline != blank -%}
+        <p class="ao-info__tagline">{{ t.tagline }}</p>
+      {%- endif -%}
+
+      {%- if t.show_title and heading != blank -%}
+        <h1 class="ao-info__title">{{ heading }}</h1>
+      {%- endif -%}
+
+      {%- if body != blank -%}
+        <div class="ao-info__body rte">{{ body }}</div>
+      {%- endif -%}
+    </div>
+
+    {%- comment -%} Optional stacked content blocks {%- endcomment -%}
+    {%- if section.blocks.size > 0 -%}
+      <div class="ao-info__blocks">
+        {%- for block in section.blocks -%}
+          {%- case block.type -%}
+
+            {%- when 'text' -%}
+              <div class="ao-info__block ao-info__block--text" {{ block.shopify_attributes }}>
+                {%- if block.settings.heading != blank -%}
+                  <h2 class="ao-info__block-heading">{{ block.settings.heading }}</h2>
+                {%- endif -%}
+                {%- if block.settings.text != blank -%}
+                  <div class="ao-info__block-text rte">{{ block.settings.text }}</div>
+                {%- endif -%}
+              </div>
+
+            {%- when 'image' -%}
+              {%- if block.settings.image != blank -%}
+                <div class="ao-info__block ao-info__block--image" {{ block.shopify_attributes }}>
+                  {{
+                    block.settings.image
+                    | image_url: width: 2200
+                    | image_tag:
+                      class: 'ao-info__block-img',
+                      widths: '400, 600, 900, 1120, 1600, 2200',
+                      sizes: '(min-width: 990px) var(--ao-info-max-w), 100vw',
+                      loading: 'lazy'
+                  }}
+                  {%- if block.settings.caption != blank -%}
+                    <p class="ao-info__block-caption">{{ block.settings.caption }}</p>
+                  {%- endif -%}
+                </div>
+              {%- endif -%}
+
+            {%- when 'accordion' -%}
+              <details class="ao-info__block ao-info__block--accordion" {{ block.shopify_attributes }}>
+                <summary class="ao-info__accordion-q">
+                  <span>{{ block.settings.question }}</span>
+                  <span class="ao-info__accordion-icon" aria-hidden="true"></span>
+                </summary>
+                <div class="ao-info__accordion-a rte">{{ block.settings.answer }}</div>
+              </details>
+
+          {%- endcase -%}
+        {%- endfor -%}
+      </div>
+    {%- endif -%}
+  </div>
+</div>
+
+{% stylesheet %}
+.ao-info {
+  --ao-info-body-font: var(--font-body-family, sans-serif);
+  background: var(--ao-info-bg, #000);
+  color: var(--ao-info-fg, #fff);
+  font-family: var(--ao-info-body-font);
+}
+.ao-info__inner {
+  max-width: var(--ao-info-max-w, 1120px);
+  margin-inline: auto;
+  padding: var(--ao-info-pad-t-m) var(--ao-info-pad-x-m) var(--ao-info-pad-b-m);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.ao-info--text-center { text-align: center; }
+.ao-info--text-left { text-align: left; }
+
+.ao-info__masthead {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.ao-info__logo { display: flex; justify-content: inherit; }
+.ao-info--text-center .ao-info__logo { justify-content: center; }
+.ao-info--text-left .ao-info__logo { justify-content: flex-start; }
+.ao-info__logo-img {
+  display: block;
+  width: var(--ao-info-logo-w-m);
+  height: auto;
+}
+
+.ao-info__tagline {
+  margin: 0;
+  padding: 8px 0;
+  font-size: var(--ao-info-tagline-m);
+  font-weight: 700;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+.ao-info__title {
+  margin: 0;
+  padding: 8px 0;
+  font-size: var(--ao-info-title-m);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+}
+.ao-info__body {
+  font-size: var(--ao-info-body-m);
+  font-weight: 600;
+  line-height: 1.5;
+}
+.ao-info__body > :first-child { margin-top: 0; }
+.ao-info__body > :last-child { margin-bottom: 0; }
+.ao-info__body a { color: var(--ao-info-accent, #ed117c); }
+
+/* Blocks — no gap, so consecutive accordion rows sit flush and share borders */
+.ao-info__blocks {
+  display: flex;
+  flex-direction: column;
+  margin-top: 16px;
+}
+.ao-info__block--text,
+.ao-info__block--image { margin-bottom: 32px; }
+.ao-info__block--text:last-child,
+.ao-info__block--image:last-child { margin-bottom: 0; }
+/* Space an accordion group away from whatever precedes it */
+.ao-info__block--text + .ao-info__block--accordion,
+.ao-info__block--image + .ao-info__block--accordion { margin-top: 0; }
+.ao-info__block--accordion + .ao-info__block--text,
+.ao-info__block--accordion + .ao-info__block--image { margin-top: 32px; }
+.ao-info__block-heading {
+  margin: 0 0 12px;
+  font-size: var(--ao-info-tagline-m);
+  font-weight: 700;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+.ao-info__block-text {
+  font-size: var(--ao-info-body-m);
+  font-weight: 600;
+  line-height: 1.5;
+}
+.ao-info__block-text > :first-child { margin-top: 0; }
+.ao-info__block-text > :last-child { margin-bottom: 0; }
+.ao-info__block-text a,
+.ao-info__accordion-a a { color: var(--ao-info-accent, #ed117c); }
+
+.ao-info__block-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--ao-radius, 8px);
+}
+.ao-info__block-caption {
+  margin: 12px 0 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+  opacity: 0.7;
+}
+
+/* Accordion — native details/summary, no JS */
+.ao-info__block--accordion {
+  text-align: left;
+  border-bottom: 1px solid rgba(250, 250, 250, 0.24);
+}
+.ao-info__block--accordion:first-of-type {
+  border-top: 1px solid rgba(250, 250, 250, 0.24);
+}
+.ao-info__accordion-q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 12px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+.ao-info__accordion-q::-webkit-details-marker { display: none; }
+.ao-info__accordion-q:hover { color: var(--ao-info-accent, #ed117c); }
+.ao-info__accordion-icon {
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.2s ease;
+}
+.ao-info__block--accordion[open] .ao-info__accordion-icon { transform: rotate(-135deg); }
+.ao-info__accordion-a {
+  padding: 0 12px 20px;
+  font-size: var(--ao-info-body-m);
+  font-weight: 600;
+  line-height: 1.5;
+}
+.ao-info__accordion-a > :first-child { margin-top: 0; }
+.ao-info__accordion-a > :last-child { margin-bottom: 0; }
+
+/* Tablet & up */
+@media screen and (min-width: 750px) {
+  .ao-info__inner {
+    padding-left: 48px;
+    padding-right: 48px;
+    gap: 20px;
+  }
+  .ao-info__masthead { gap: 20px; }
+  .ao-info__logo-img { width: calc((var(--ao-info-logo-w-d) + var(--ao-info-logo-w-m)) / 2); }
+  .ao-info__tagline,
+  .ao-info__block-heading { font-size: calc((var(--ao-info-tagline-d) + var(--ao-info-tagline-m)) / 2); }
+  .ao-info__title { font-size: calc((var(--ao-info-title-d) + var(--ao-info-title-m)) / 2); }
+  .ao-info__body,
+  .ao-info__block-text,
+  .ao-info__accordion-a { font-size: calc((var(--ao-info-body-d) + var(--ao-info-body-m)) / 2); }
+  .ao-info__accordion-q { font-size: 18px; padding: 20px 12px; }
+}
+
+/* Desktop */
+@media screen and (min-width: 990px) {
+  .ao-info__inner {
+    padding: var(--ao-info-pad-t-d) var(--ao-info-pad-x-d) var(--ao-info-pad-b-d);
+    gap: 24px;
+  }
+  .ao-info__masthead { gap: 24px; }
+  .ao-info__logo-img { width: var(--ao-info-logo-w-d); }
+  .ao-info__tagline,
+  .ao-info__block-heading { font-size: var(--ao-info-tagline-d); }
+  .ao-info__title { font-size: var(--ao-info-title-d); }
+  .ao-info__body,
+  .ao-info__block-text,
+  .ao-info__accordion-a { font-size: var(--ao-info-body-d); }
+  .ao-info__blocks { margin-top: 24px; }
+  .ao-info__block--text,
+  .ao-info__block--image { margin-bottom: 40px; }
+  .ao-info__block--accordion + .ao-info__block--text,
+  .ao-info__block--accordion + .ao-info__block--image { margin-top: 40px; }
+  .ao-info__accordion-q { font-size: 20px; }
+}
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "AO Info Page",
+  "tag": "section",
+  "class": "ao-info-section",
+  "settings": [
+    { "type": "header", "content": "Masthead" },
+    { "type": "image_picker", "id": "logo", "label": "Logo / crest image" },
+    { "type": "range", "id": "logo_width", "min": 40, "max": 320, "step": 1, "unit": "px", "label": "Logo width (desktop)", "default": 137 },
+    { "type": "range", "id": "logo_width_mobile", "min": 40, "max": 240, "step": 1, "unit": "px", "label": "Logo width (mobile)", "default": 77 },
+    { "type": "text", "id": "tagline", "label": "Tagline", "default": "I AM NOT RESPONSIBLE FOR YOUR PERCEPTION OF ME" },
+    { "type": "checkbox", "id": "show_title", "label": "Show page title", "default": true },
+    { "type": "text", "id": "title_override", "label": "Title override", "info": "Leave blank to use the page title." },
+    { "type": "richtext", "id": "body_override", "label": "Body override", "info": "Leave blank to use the page content from the Shopify page editor." },
+
+    { "type": "header", "content": "Layout" },
+    { "type": "select", "id": "text_alignment", "label": "Text alignment", "default": "center",
+      "options": [
+        { "value": "center", "label": "Center" },
+        { "value": "left", "label": "Left" }
+      ]
+    },
+    { "type": "range", "id": "content_max_width", "min": 600, "max": 1440, "step": 20, "unit": "px", "label": "Content max width", "default": 1120 },
+
+    { "type": "header", "content": "Colors" },
+    { "type": "color", "id": "background_color", "label": "Background", "default": "#000000" },
+    { "type": "color", "id": "text_color", "label": "Text", "default": "#ffffff" },
+    { "type": "color", "id": "accent_color", "label": "Accent (links, hover)", "default": "#ed117c" },
+
+    { "type": "header", "content": "Typography" },
+    { "type": "font_picker", "id": "heading_font", "label": "Heading font", "default": "montserrat_n7" },
+    { "type": "font_picker", "id": "body_font", "label": "Body font", "default": "noto_sans_n4" },
+    { "type": "range", "id": "tagline_size", "min": 16, "max": 56, "step": 1, "unit": "px", "label": "Tagline size (desktop)", "default": 30 },
+    { "type": "range", "id": "tagline_size_mobile", "min": 12, "max": 36, "step": 1, "unit": "px", "label": "Tagline size (mobile)", "default": 20 },
+    { "type": "range", "id": "title_size", "min": 20, "max": 72, "step": 1, "unit": "px", "label": "Title size (desktop)", "default": 40 },
+    { "type": "range", "id": "title_size_mobile", "min": 16, "max": 48, "step": 1, "unit": "px", "label": "Title size (mobile)", "default": 24 },
+    { "type": "range", "id": "body_size", "min": 14, "max": 32, "step": 1, "unit": "px", "label": "Body size (desktop)", "default": 22 },
+    { "type": "range", "id": "body_size_mobile", "min": 12, "max": 24, "step": 1, "unit": "px", "label": "Body size (mobile)", "default": 16 },
+
+    { "type": "header", "content": "Spacing — desktop" },
+    { "type": "range", "id": "padding_top", "min": 0, "max": 200, "step": 4, "unit": "px", "label": "Padding top", "default": 128 },
+    { "type": "range", "id": "padding_bottom", "min": 0, "max": 200, "step": 4, "unit": "px", "label": "Padding bottom", "default": 96 },
+    { "type": "range", "id": "padding_horizontal", "min": 0, "max": 200, "step": 4, "unit": "px", "label": "Padding left/right", "default": 160 },
+
+    { "type": "header", "content": "Spacing — mobile" },
+    { "type": "range", "id": "padding_top_mobile", "min": 0, "max": 160, "step": 4, "unit": "px", "label": "Padding top", "default": 112 },
+    { "type": "range", "id": "padding_bottom_mobile", "min": 0, "max": 160, "step": 4, "unit": "px", "label": "Padding bottom", "default": 64 },
+    { "type": "range", "id": "padding_horizontal_mobile", "min": 0, "max": 60, "step": 2, "unit": "px", "label": "Padding left/right", "default": 24 }
+  ],
+  "blocks": [
+    {
+      "type": "text",
+      "name": "Text section",
+      "settings": [
+        { "type": "text", "id": "heading", "label": "Heading" },
+        { "type": "richtext", "id": "text", "label": "Text", "default": "<p>Share the details of this section.</p>" }
+      ]
+    },
+    {
+      "type": "image",
+      "name": "Image",
+      "settings": [
+        { "type": "image_picker", "id": "image", "label": "Image" },
+        { "type": "text", "id": "caption", "label": "Caption" }
+      ]
+    },
+    {
+      "type": "accordion",
+      "name": "Accordion row",
+      "settings": [
+        { "type": "text", "id": "question", "label": "Question / label", "default": "Question" },
+        { "type": "richtext", "id": "answer", "label": "Answer", "default": "<p>Answer copy.</p>" }
+      ]
+    }
+  ],
+  "presets": [
+    { "name": "AO Info Page" }
+  ]
+}
+{% endschema %}
