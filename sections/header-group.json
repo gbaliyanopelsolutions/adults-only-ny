@@ -1,0 +1,54 @@
+{
+  "name": "t:sections.header.name",
+  "type": "header",
+  "sections": {
+    "ao-header": {
+      "type": "ao-header",
+      "settings": {
+        "logo_width": 85,
+        "logo_width_mobile": 68,
+        "logo_text_top": "AO",
+        "logo_text_bottom": "ADULTS ONLY",
+        "logo_font": "montserrat_n7",
+        "menu": "main-menu",
+        "show_menu_icon": true,
+        "drawer_heading": "MENU",
+        "show_search": false,
+        "show_account": false,
+        "show_cart": true,
+        "cart_label": "CART",
+        "link_font": "noto_sans_n7",
+        "link_font_size": 20,
+        "link_font_size_mobile": 16,
+        "transparent_over_hero": true,
+        "sticky": true,
+        "background_color": "#000000",
+        "text_color": "#fafafa",
+        "accent_color": "#ed117c",
+        "padding_top": 24,
+        "padding_bottom": 32,
+        "padding_horizontal": 160,
+        "padding_top_mobile": 24,
+        "padding_bottom_mobile": 24,
+        "padding_horizontal_mobile": 24
+      }
+    },
+    "header": {
+      "type": "header",
+      "disabled": true,
+      "settings": {
+        "logo_position": "middle-center",
+        "menu": "main-menu",
+        "menu_type_desktop": "drawer",
+        "sticky_header_type": "on-scroll-up",
+        "color_scheme": "scheme-b9854e27-2b20-4eeb-8683-4c627e902978",
+        "menu_color_scheme": "scheme-b9854e27-2b20-4eeb-8683-4c627e902978",
+        "mobile_logo_position": "center",
+        "margin_bottom": 0,
+        "padding_top": 20,
+        "padding_bottom": 20
+      }
+    }
+  },
+  "order": ["ao-header"]
+}

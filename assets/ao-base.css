@@ -1,0 +1,26 @@
+/* Adults Only — shared design tokens for custom AO sections */
+:root {
+  --ao-black: #000000;
+  --ao-white: #ffffff;
+  --ao-off-white: #fafafa;
+  --ao-ink: #1a1a1a;
+  --ao-pink: #ed117c;
+  --ao-radius: 8px;
+}
+
+.ao-header-section,
+.ao-hero-section,
+.ao-footer-section {
+  box-sizing: border-box;
+}
+.ao-header-section *,
+.ao-hero-section *,
+.ao-footer-section * {
+  box-sizing: border-box;
+}
+
+/* Neutralize Dawn section spacing wrappers around our full-bleed sections */
+.ao-header-section,
+.ao-footer-section {
+  margin: 0;
+}

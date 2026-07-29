@@ -1,0 +1,274 @@
+{{ 'ao-base.css' | asset_url | stylesheet_tag }}
+
+{%- liquid
+  assign t = section.settings
+  assign hero_alt = t.heading | default: shop.name | strip_html
+-%}
+
+{%- style -%}
+  #ao-hero-{{ section.id }} {
+    --ao-hero-h-d: {{ t.height_desktop }}px;
+    --ao-hero-h-t: {{ t.height_tablet }}px;
+    --ao-hero-h-m: {{ t.height_mobile }}px;
+    --ao-hero-overlay: {{ t.overlay_opacity | divided_by: 100.0 }};
+    --ao-hero-overlay-color: {{ t.overlay_color }};
+    --ao-hero-fg: {{ t.text_color }};
+    --ao-hero-btn-bg: {{ t.button_background }};
+    --ao-hero-btn-fg: {{ t.button_text_color }};
+    --ao-hero-btn-border: {{ t.button_border_color }};
+  }
+  {%- if t.full_viewport -%}
+    #ao-hero-{{ section.id }} .ao-hero { --ao-hero-h-d: 100svh; --ao-hero-h-t: 100svh; --ao-hero-h-m: 100svh; }
+  {%- endif -%}
+  {%- if t.heading_font != blank -%}
+    {{ t.heading_font | font_face: font_display: 'swap' }}
+    #ao-hero-{{ section.id }} .ao-hero__heading { font-family: {{ t.heading_font.family }}, {{ t.heading_font.fallback_families }}; }
+  {%- endif -%}
+{%- endstyle -%}
+
+<div id="ao-hero-{{ section.id }}">
+  <section
+    class="ao-hero ao-hero--{{ t.content_position }} ao-hero--text-{{ t.text_alignment }}"
+    aria-label="{{ t.heading | default: 'Hero' | strip_html }}"
+  >
+    <div class="ao-hero__media">
+      {%- if t.video != blank -%}
+        {{
+          t.video
+          | video_tag:
+            image_size: '1600x',
+            autoplay: t.autoplay,
+            loop: t.loop,
+            muted: true,
+            controls: false,
+            playsinline: true,
+            class: 'ao-hero__video'
+        }}
+      {%- elsif t.video_url != blank -%}
+        <div class="ao-hero__external">
+          {%- if t.video_url.type == 'youtube' -%}
+            <iframe
+              class="ao-hero__iframe"
+              src="https://www.youtube.com/embed/{{ t.video_url.id }}?autoplay={% if t.autoplay %}1{% else %}0{% endif %}&mute=1&loop={% if t.loop %}1{% else %}0{% endif %}&playlist={{ t.video_url.id }}&controls=0&modestbranding=1&playsinline=1&rel=0"
+              title="{{ t.heading | default: shop.name | strip_html }}"
+              allow="autoplay; encrypted-media"
+              allowfullscreen
+              loading="lazy"
+            ></iframe>
+          {%- elsif t.video_url.type == 'vimeo' -%}
+            <iframe
+              class="ao-hero__iframe"
+              src="https://player.vimeo.com/video/{{ t.video_url.id }}?autoplay={% if t.autoplay %}1{% else %}0{% endif %}&muted=1&loop={% if t.loop %}1{% else %}0{% endif %}&background=1"
+              title="{{ t.heading | default: shop.name | strip_html }}"
+              allow="autoplay; encrypted-media"
+              allowfullscreen
+              loading="lazy"
+            ></iframe>
+          {%- endif -%}
+        </div>
+      {%- elsif t.poster != blank -%}
+        {{
+          t.poster
+          | image_url: width: 3000
+          | image_tag:
+            class: 'ao-hero__img',
+            widths: '750, 1100, 1500, 1920, 2400, 3000',
+            sizes: '100vw',
+            alt: hero_alt,
+            loading: 'eager',
+            fetchpriority: 'high'
+        }}
+      {%- else -%}
+        <img
+          src="{{ 'ao-hero-poster.png' | asset_url }}"
+          class="ao-hero__img"
+          width="568"
+          height="320"
+          alt="{{ hero_alt }}"
+          loading="eager"
+          fetchpriority="high"
+        >
+      {%- endif -%}
+    </div>
+
+    {%- if t.overlay_opacity > 0 -%}
+      <div class="ao-hero__overlay" aria-hidden="true"></div>
+    {%- endif -%}
+
+    {%- if t.heading != blank or t.subheading != blank or t.button_label != blank -%}
+      <div class="ao-hero__content">
+        {%- if t.subheading != blank -%}
+          <p class="ao-hero__subheading">{{ t.subheading }}</p>
+        {%- endif -%}
+        {%- if t.heading != blank -%}
+          <h1 class="ao-hero__heading" style="font-size:{{ t.heading_size }}px">{{ t.heading }}</h1>
+        {%- endif -%}
+        {%- if t.button_label != blank -%}
+          <a
+            href="{{ t.button_link | default: '#' }}"
+            class="ao-hero__button{% if t.button_style == 'outline' %} ao-hero__button--outline{% endif %}"
+          >
+            {{- t.button_label -}}
+          </a>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+  </section>
+</div>
+
+{% stylesheet %}
+.ao-hero {
+  position: relative;
+  width: 100%;
+  height: var(--ao-hero-h-m);
+  overflow: hidden;
+  background: #000;
+  display: flex;
+}
+.ao-hero__media { position: absolute; inset: 0; }
+.ao-hero__media .ao-hero__video,
+.ao-hero__media video,
+.ao-hero__img,
+.ao-hero__placeholder,
+.ao-hero__placeholder-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.ao-hero__external { position: absolute; inset: 0; }
+/* keep iframe covering the viewport regardless of 16:9 letterboxing */
+.ao-hero__iframe {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 177.78vh; /* 16:9 based on viewport height */
+  min-width: 100%;
+  height: 56.25vw; /* 16:9 based on viewport width */
+  min-height: 100%;
+  transform: translate(-50%, -50%);
+  border: 0;
+  pointer-events: none;
+}
+.ao-hero__overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--ao-hero-overlay-color, #000);
+  opacity: var(--ao-hero-overlay, 0);
+}
+.ao-hero__content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 24px;
+  color: var(--ao-hero-fg, #fff);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.ao-hero__subheading { margin: 0; text-transform: uppercase; letter-spacing: 0.25em; font-size: 14px; }
+.ao-hero__heading { margin: 0; line-height: 1.05; font-weight: 700; }
+.ao-hero__button {
+  align-self: flex-start;
+  display: inline-block;
+  padding: 14px 32px;
+  border-radius: var(--ao-radius);
+  background: var(--ao-hero-btn-bg, #ed117c);
+  color: var(--ao-hero-btn-fg, #fff);
+  border: 2px solid var(--ao-hero-btn-border, #ed117c);
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+  transition: opacity 0.2s ease;
+}
+.ao-hero__button--outline { background: transparent; }
+.ao-hero__button:hover { opacity: 0.85; }
+
+/* content position */
+.ao-hero--top { align-items: flex-start; }
+.ao-hero--middle { align-items: center; }
+.ao-hero--bottom { align-items: flex-end; }
+.ao-hero--text-left .ao-hero__content { text-align: left; align-items: flex-start; }
+.ao-hero--text-center .ao-hero__content { text-align: center; align-items: center; }
+.ao-hero--text-center .ao-hero__button { align-self: center; }
+.ao-hero--text-right .ao-hero__content { text-align: right; align-items: flex-end; }
+.ao-hero--text-right .ao-hero__button { align-self: flex-end; }
+
+@media screen and (min-width: 750px) {
+  .ao-hero { height: var(--ao-hero-h-t); }
+  .ao-hero__content { padding: 48px; }
+}
+@media screen and (min-width: 990px) {
+  .ao-hero { height: var(--ao-hero-h-d); }
+  .ao-hero__content { padding: 64px 160px; }
+}
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "AO Hero Video",
+  "tag": "section",
+  "class": "ao-hero-section",
+  "settings": [
+    { "type": "header", "content": "Media" },
+    { "type": "video", "id": "video", "label": "Video (Shopify-hosted)" },
+    { "type": "video_url", "id": "video_url", "label": "Or external video URL", "accept": ["youtube", "vimeo"], "placeholder": "https://www.youtube.com/watch?v=..." },
+    { "type": "image_picker", "id": "poster", "label": "Poster / fallback image", "info": "Shown before the video loads and used when no video is set." },
+    { "type": "checkbox", "id": "autoplay", "label": "Autoplay", "default": true },
+    { "type": "checkbox", "id": "loop", "label": "Loop", "default": true },
+
+    { "type": "header", "content": "Size" },
+    { "type": "checkbox", "id": "full_viewport", "label": "Full viewport height", "default": false },
+    { "type": "range", "id": "height_desktop", "min": 400, "max": 1200, "step": 10, "unit": "px", "label": "Height (desktop)", "default": 818 },
+    { "type": "range", "id": "height_tablet", "min": 300, "max": 1000, "step": 10, "unit": "px", "label": "Height (tablet)", "default": 560 },
+    { "type": "range", "id": "height_mobile", "min": 200, "max": 900, "step": 10, "unit": "px", "label": "Height (mobile)", "default": 480 },
+
+    { "type": "header", "content": "Overlay" },
+    { "type": "color", "id": "overlay_color", "label": "Overlay color", "default": "#000000" },
+    { "type": "range", "id": "overlay_opacity", "min": 0, "max": 100, "step": 5, "unit": "%", "label": "Overlay opacity", "default": 0 },
+
+    { "type": "header", "content": "Content (optional)" },
+    { "type": "text", "id": "subheading", "label": "Subheading" },
+    { "type": "text", "id": "heading", "label": "Heading" },
+    { "type": "font_picker", "id": "heading_font", "label": "Heading font", "default": "montserrat_n7" },
+    { "type": "range", "id": "heading_size", "min": 24, "max": 120, "step": 2, "unit": "px", "label": "Heading size", "default": 64 },
+    { "type": "color", "id": "text_color", "label": "Text color", "default": "#ffffff" },
+    {
+      "type": "select", "id": "content_position", "label": "Content position", "default": "middle",
+      "options": [
+        { "value": "top", "label": "Top" },
+        { "value": "middle", "label": "Middle" },
+        { "value": "bottom", "label": "Bottom" }
+      ]
+    },
+    {
+      "type": "select", "id": "text_alignment", "label": "Text alignment", "default": "center",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "center", "label": "Center" },
+        { "value": "right", "label": "Right" }
+      ]
+    },
+
+    { "type": "header", "content": "Button" },
+    { "type": "text", "id": "button_label", "label": "Button label" },
+    { "type": "url", "id": "button_link", "label": "Button link" },
+    {
+      "type": "select", "id": "button_style", "label": "Button style", "default": "solid",
+      "options": [
+        { "value": "solid", "label": "Solid" },
+        { "value": "outline", "label": "Outline" }
+      ]
+    },
+    { "type": "color", "id": "button_background", "label": "Button background", "default": "#ed117c" },
+    { "type": "color", "id": "button_text_color", "label": "Button text", "default": "#ffffff" },
+    { "type": "color", "id": "button_border_color", "label": "Button border", "default": "#ed117c" }
+  ],
+  "presets": [{ "name": "AO Hero Video" }]
+}
+{% endschema %}

@@ -1,0 +1,63 @@
+{
+  "name": "t:sections.footer.name",
+  "type": "footer",
+  "sections": {
+    "ao-footer": {
+      "type": "ao-footer",
+      "blocks": {
+        "brand": {
+          "type": "column",
+          "settings": { "heading": "THE BRAND", "menu": "footer", "collapse_on_mobile": true }
+        },
+        "support": {
+          "type": "column",
+          "settings": { "heading": "SUPPORT", "collapse_on_mobile": true }
+        },
+        "media": {
+          "type": "column",
+          "settings": { "heading": "MEDIA", "collapse_on_mobile": true }
+        }
+      },
+      "block_order": ["brand", "support", "media"],
+      "settings": {
+        "newsletter_enable": true,
+        "newsletter_heading": "SIGN UP FOR UPDATES",
+        "newsletter_placeholder": "Email address",
+        "newsletter_button_label": "SIGN UP",
+        "newsletter_terms": "<p>By signing up, you agree to our Terms</p>",
+        "newsletter_success": "Thanks for subscribing.",
+        "show_follow": true,
+        "follow_heading": "FOLLOW US",
+        "logo_text": "AO",
+        "copyright": "© 2025 ADULTS ONLY | All rights reserved | Privacy and Cookies Policy | Terms and conditions",
+        "background_color": "#000000",
+        "text_color": "#fafafa",
+        "heading_color": "#fafafa",
+        "accent_color": "#ed117c",
+        "input_background": "#fafafa",
+        "input_text_color": "#1a1a1a",
+        "heading_font": "montserrat_n7",
+        "body_font": "noto_sans_n4",
+        "padding_vertical": 48,
+        "padding_horizontal": 160,
+        "padding_vertical_mobile": 32,
+        "padding_horizontal_mobile": 24
+      }
+    },
+    "footer": {
+      "type": "footer",
+      "disabled": true,
+      "settings": {
+        "color_scheme": "scheme-4",
+        "newsletter_enable": false,
+        "show_social": true,
+        "payment_enable": true,
+        "show_policy": true,
+        "margin_top": 0,
+        "padding_top": 36,
+        "padding_bottom": 36
+      }
+    }
+  },
+  "order": ["ao-footer"]
+}

@@ -1,0 +1,357 @@
+{{ 'ao-base.css' | asset_url | stylesheet_tag }}
+
+{%- liquid
+  assign t = section.settings
+  assign cart_count = cart.item_count
+  # Transparent overlay only makes sense on the homepage, over the hero.
+  assign is_transparent = false
+  if t.transparent_over_hero and request.page_type == 'index'
+    assign is_transparent = true
+  endif
+-%}
+
+{%- style -%}
+  #ao-header-{{ section.id }} {
+    --ao-h-bg: {{ t.background_color }};
+    --ao-h-fg: {{ t.text_color }};
+    --ao-h-accent: {{ t.accent_color }};
+    --ao-h-pad-y-d: {{ t.padding_top }}px;
+    --ao-h-pad-b-d: {{ t.padding_bottom }}px;
+    --ao-h-pad-x-d: {{ t.padding_horizontal }}px;
+    --ao-h-pad-y-m: {{ t.padding_top_mobile }}px;
+    --ao-h-pad-b-m: {{ t.padding_bottom_mobile }}px;
+    --ao-h-pad-x-m: {{ t.padding_horizontal_mobile }}px;
+    --ao-h-link-size: {{ t.link_font_size }}px;
+    --ao-h-link-size-m: {{ t.link_font_size_mobile }}px;
+    --ao-logo-w-d: {{ t.logo_width }}px;
+    --ao-logo-w-m: {{ t.logo_width_mobile }}px;
+  }
+  {%- if t.link_font != blank -%}
+    {{ t.link_font | font_face: font_display: 'swap' }}
+    #ao-header-{{ section.id }} { --ao-h-font: {{ t.link_font.family }}, {{ t.link_font.fallback_families }}; }
+  {%- endif -%}
+  {%- if t.logo_font != blank -%}
+    {{ t.logo_font | font_face: font_display: 'swap' }}
+    #ao-header-{{ section.id }} .ao-header__logo-text { font-family: {{ t.logo_font.family }}, {{ t.logo_font.fallback_families }}; }
+  {%- endif -%}
+{%- endstyle -%}
+
+<ao-header
+  id="ao-header-{{ section.id }}"
+  class="ao-header{% if is_transparent %} ao-header--transparent{% endif %}{% if t.sticky %} ao-header--sticky{% endif %}"
+  data-sticky="{{ t.sticky }}"
+  data-transparent="{{ is_transparent }}"
+>
+  <div class="ao-header__inner">
+    {%- comment -%} Left: menu toggle {%- endcomment -%}
+    <div class="ao-header__col ao-header__col--left">
+      {%- if t.menu != blank or t.show_menu_icon -%}
+        <button
+          type="button"
+          class="ao-header__menu-toggle"
+          aria-label="{{ 'sections.header.menu' | t }}"
+          aria-expanded="false"
+          aria-controls="ao-drawer-{{ section.id }}"
+        >
+          <span class="ao-header__menu-icon" aria-hidden="true">
+            {{- 'icon-hamburger.svg' | inline_asset_content -}}
+          </span>
+          {%- if t.menu_label != blank -%}
+            <span class="ao-header__menu-label">{{ t.menu_label }}</span>
+          {%- endif -%}
+        </button>
+      {%- endif -%}
+    </div>
+
+    {%- comment -%} Center: logo {%- endcomment -%}
+    <div class="ao-header__col ao-header__col--center">
+      <a href="{{ routes.root_url }}" class="ao-header__logo" aria-label="{{ shop.name }}">
+        {%- if t.logo != blank -%}
+          {%- capture logo_sizes -%}{{ t.logo_width }}px{%- endcapture -%}
+          {{
+            t.logo
+            | image_url: width: 600
+            | image_tag:
+              class: 'ao-header__logo-img',
+              widths: '120, 180, 240, 360, 480, 600',
+              sizes: logo_sizes,
+              alt: shop.name,
+              loading: 'eager'
+          }}
+        {%- else -%}
+          <span class="ao-header__logo-text">
+            <span class="ao-header__logo-mark">{{ t.logo_text_top | default: 'AO' }}</span>
+            {%- if t.logo_text_bottom != blank -%}
+              <span class="ao-header__logo-word">{{ t.logo_text_bottom }}</span>
+            {%- endif -%}
+          </span>
+        {%- endif -%}
+      </a>
+    </div>
+
+    {%- comment -%} Right: cart / account {%- endcomment -%}
+    <div class="ao-header__col ao-header__col--right">
+      {%- if t.show_search -%}
+        <a href="{{ routes.search_url }}" class="ao-header__link ao-header__link--icon" aria-label="{{ 'general.search.search' | t }}">
+          <span class="svg-wrapper">{{- 'icon-search.svg' | inline_asset_content -}}</span>
+        </a>
+      {%- endif -%}
+      {%- if t.show_account and shop.customer_accounts_enabled -%}
+        <a href="{{ routes.account_url }}" class="ao-header__link ao-header__link--icon" aria-label="{{ 'customer.account_fallback' | t }}">
+          <span class="svg-wrapper">{{- 'icon-account.svg' | inline_asset_content -}}</span>
+        </a>
+      {%- endif -%}
+      {%- if t.show_cart -%}
+        <a href="{{ routes.cart_url }}" class="ao-header__link ao-header__cart" id="ao-cart-link-{{ section.id }}">
+          <span class="ao-header__cart-label">{{ t.cart_label | default: 'CART' }}</span>
+          <span class="ao-header__cart-count">({{ cart_count }})</span>
+        </a>
+      {%- endif -%}
+    </div>
+  </div>
+
+  {%- comment -%} Slide-in drawer menu {%- endcomment -%}
+  {%- if t.menu != blank -%}
+    <div class="ao-drawer" id="ao-drawer-{{ section.id }}" aria-hidden="true">
+      <div class="ao-drawer__overlay" data-ao-drawer-close></div>
+      <nav class="ao-drawer__panel" aria-label="{{ 'sections.header.menu' | t }}">
+        <div class="ao-drawer__head">
+          {%- if t.drawer_heading != blank -%}
+            <span class="ao-drawer__heading">{{ t.drawer_heading }}</span>
+          {%- endif -%}
+          <button type="button" class="ao-drawer__close" data-ao-drawer-close aria-label="{{ 'accessibility.close' | t }}">
+            {{- 'icon-close.svg' | inline_asset_content -}}
+          </button>
+        </div>
+        <ul class="ao-drawer__list" role="list">
+          {%- for link in t.menu.links -%}
+            <li class="ao-drawer__item">
+              <a href="{{ link.url }}" class="ao-drawer__link{% if link.active %} ao-drawer__link--active{% endif %}">{{ link.title }}</a>
+              {%- if link.links != blank -%}
+                <ul class="ao-drawer__sublist" role="list">
+                  {%- for child in link.links -%}
+                    <li><a href="{{ child.url }}" class="ao-drawer__sublink">{{ child.title }}</a></li>
+                  {%- endfor -%}
+                </ul>
+              {%- endif -%}
+            </li>
+          {%- endfor -%}
+        </ul>
+      </nav>
+    </div>
+  {%- endif -%}
+</ao-header>
+
+{% stylesheet %}
+.ao-header {
+  --ao-h-font: var(--font-body-family, sans-serif);
+  position: relative;
+  z-index: 30;
+  width: 100%;
+  background: var(--ao-h-bg, #000);
+  color: var(--ao-h-fg, #fafafa);
+  font-family: var(--ao-h-font);
+}
+.ao-header--transparent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: transparent;
+}
+.ao-header--sticky.ao-header--is-stuck,
+.ao-header--sticky:not(.ao-header--transparent) {
+  position: sticky;
+  top: 0;
+}
+.ao-header--transparent.ao-header--is-stuck {
+  position: fixed;
+  top: 0;
+  background: var(--ao-h-bg, #000);
+  animation: ao-header-drop 0.3s ease;
+}
+@keyframes ao-header-drop { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+
+.ao-header__inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 24px;
+  padding: var(--ao-h-pad-y-m) var(--ao-h-pad-x-m) var(--ao-h-pad-b-m);
+}
+.ao-header__col { display: flex; align-items: center; }
+.ao-header__col--left { justify-content: flex-start; }
+.ao-header__col--center { justify-content: center; }
+.ao-header__col--right { justify-content: flex-end; gap: 20px; }
+
+.ao-header__menu-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.ao-header__menu-icon { display: inline-flex; }
+.ao-header__menu-icon svg { width: 30px; height: 24px; }
+.ao-header__menu-icon svg path { fill: currentColor; }
+.ao-header__menu-label { font-size: var(--ao-h-link-size-m); font-weight: 700; }
+
+.ao-header__logo { display: inline-flex; text-decoration: none; color: inherit; }
+.ao-header__logo-img { display: block; width: var(--ao-logo-w-m); height: auto; }
+.ao-header__logo-text {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+  color: inherit;
+}
+.ao-header__logo-mark { font-size: calc(var(--ao-logo-w-m) * 0.5); font-weight: 700; letter-spacing: 0.02em; }
+.ao-header__logo-word { font-size: calc(var(--ao-logo-w-m) * 0.11); letter-spacing: 0.35em; text-transform: uppercase; margin-top: 4px; }
+
+.ao-header__link {
+  color: inherit;
+  text-decoration: none;
+  font-size: var(--ao-h-link-size-m);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.ao-header__link--icon .svg-wrapper { display: inline-flex; }
+.ao-header__link--icon svg { width: 22px; height: 22px; }
+.ao-header__link:hover { opacity: 0.7; }
+.ao-header__cart-count { font-variant-numeric: tabular-nums; }
+
+/* Drawer */
+.ao-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  visibility: hidden;
+  pointer-events: none;
+}
+.ao-drawer.is-open { visibility: visible; pointer-events: auto; }
+.ao-drawer__overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.ao-drawer.is-open .ao-drawer__overlay { opacity: 1; }
+.ao-drawer__panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: min(85vw, 420px);
+  background: var(--ao-h-bg, #000);
+  color: var(--ao-h-fg, #fafafa);
+  padding: 24px;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.ao-drawer.is-open .ao-drawer__panel { transform: translateX(0); }
+.ao-drawer__head { display: flex; align-items: center; justify-content: space-between; }
+.ao-drawer__heading { text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; }
+.ao-drawer__close { background: none; border: 0; color: inherit; cursor: pointer; padding: 4px; display: inline-flex; }
+.ao-drawer__close svg { width: 22px; height: 22px; }
+.ao-drawer__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.ao-drawer__link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 20px;
+  font-weight: 600;
+  padding: 12px 0;
+}
+.ao-drawer__link:hover, .ao-drawer__link--active { color: var(--ao-h-accent, #ed117c); }
+.ao-drawer__sublist { list-style: none; margin: 0 0 8px; padding: 0 0 0 16px; display: flex; flex-direction: column; gap: 2px; }
+.ao-drawer__sublink { color: inherit; text-decoration: none; opacity: 0.8; font-size: 15px; padding: 6px 0; display: block; }
+.ao-drawer__sublink:hover { opacity: 1; }
+
+/* Tablet & up */
+@media screen and (min-width: 750px) {
+  .ao-header__inner {
+    padding: var(--ao-h-pad-y-d) 48px var(--ao-h-pad-b-d);
+    gap: 40px;
+  }
+  .ao-header__menu-label { font-size: var(--ao-h-link-size); }
+  .ao-header__logo-img { width: var(--ao-logo-w-d); }
+  .ao-header__logo-mark { font-size: calc(var(--ao-logo-w-d) * 0.5); }
+  .ao-header__logo-word { font-size: calc(var(--ao-logo-w-d) * 0.11); }
+  .ao-header__link { font-size: var(--ao-h-link-size); }
+  .ao-header__link--icon svg { width: 26px; height: 26px; }
+}
+@media screen and (min-width: 990px) {
+  .ao-header__inner {
+    padding-left: var(--ao-h-pad-x-d);
+    padding-right: var(--ao-h-pad-x-d);
+  }
+}
+{% endstylesheet %}
+
+<script src="{{ 'ao-header.js' | asset_url }}" defer="defer"></script>
+
+{% schema %}
+{
+  "name": "AO Header",
+  "tag": "header",
+  "class": "ao-header-section",
+  "settings": [
+    { "type": "header", "content": "Logo" },
+    { "type": "image_picker", "id": "logo", "label": "Logo image" },
+    { "type": "range", "id": "logo_width", "min": 40, "max": 300, "step": 5, "unit": "px", "label": "Logo width (desktop)", "default": 85 },
+    { "type": "range", "id": "logo_width_mobile", "min": 40, "max": 200, "step": 5, "unit": "px", "label": "Logo width (mobile)", "default": 68 },
+    { "type": "text", "id": "logo_text_top", "label": "Logo text — monogram (if no image)", "default": "AO" },
+    { "type": "text", "id": "logo_text_bottom", "label": "Logo text — wordmark (if no image)", "default": "ADULTS ONLY" },
+    { "type": "font_picker", "id": "logo_font", "label": "Logo font", "default": "montserrat_n7" },
+
+    { "type": "header", "content": "Menu" },
+    { "type": "link_list", "id": "menu", "label": "Menu", "default": "main-menu" },
+    { "type": "checkbox", "id": "show_menu_icon", "label": "Show menu (hamburger) icon", "default": true },
+    { "type": "text", "id": "menu_label", "label": "Menu label (optional, next to icon)" },
+    { "type": "text", "id": "drawer_heading", "label": "Drawer heading", "default": "MENU" },
+
+    { "type": "header", "content": "Right side" },
+    { "type": "checkbox", "id": "show_search", "label": "Show search icon", "default": false },
+    { "type": "checkbox", "id": "show_account", "label": "Show account icon", "default": false },
+    { "type": "checkbox", "id": "show_cart", "label": "Show cart", "default": true },
+    { "type": "text", "id": "cart_label", "label": "Cart label", "default": "CART" },
+    { "type": "font_picker", "id": "link_font", "label": "Link font", "default": "noto_sans_n7" },
+    { "type": "range", "id": "link_font_size", "min": 12, "max": 28, "step": 1, "unit": "px", "label": "Link font size (desktop)", "default": 20 },
+    { "type": "range", "id": "link_font_size_mobile", "min": 10, "max": 22, "step": 1, "unit": "px", "label": "Link font size (mobile)", "default": 16 },
+
+    { "type": "header", "content": "Appearance" },
+    { "type": "checkbox", "id": "transparent_over_hero", "label": "Overlay transparently on first section (hero)", "default": true },
+    { "type": "checkbox", "id": "sticky", "label": "Solidify & stick on scroll", "default": true },
+    { "type": "color", "id": "background_color", "label": "Background color", "default": "#000000" },
+    { "type": "color", "id": "text_color", "label": "Text / icon color", "default": "#fafafa" },
+    { "type": "color", "id": "accent_color", "label": "Accent color (active links)", "default": "#ed117c" },
+
+    { "type": "header", "content": "Spacing — desktop" },
+    { "type": "range", "id": "padding_top", "min": 0, "max": 80, "step": 2, "unit": "px", "label": "Padding top", "default": 24 },
+    { "type": "range", "id": "padding_bottom", "min": 0, "max": 80, "step": 2, "unit": "px", "label": "Padding bottom", "default": 32 },
+    { "type": "range", "id": "padding_horizontal", "min": 0, "max": 200, "step": 4, "unit": "px", "label": "Padding left/right", "default": 160 },
+
+    { "type": "header", "content": "Spacing — mobile" },
+    { "type": "range", "id": "padding_top_mobile", "min": 0, "max": 60, "step": 2, "unit": "px", "label": "Padding top", "default": 24 },
+    { "type": "range", "id": "padding_bottom_mobile", "min": 0, "max": 60, "step": 2, "unit": "px", "label": "Padding bottom", "default": 24 },
+    { "type": "range", "id": "padding_horizontal_mobile", "min": 0, "max": 60, "step": 2, "unit": "px", "label": "Padding left/right", "default": 24 }
+  ],
+  "enabled_on": { "groups": ["header"] }
+}
+{% endschema %}

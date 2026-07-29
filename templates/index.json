@@ -1,0 +1,25 @@
+{
+  "sections": {
+    "ao_hero": {
+      "type": "ao-hero",
+      "settings": {
+        "autoplay": true,
+        "loop": true,
+        "full_viewport": false,
+        "height_desktop": 818,
+        "height_tablet": 560,
+        "height_mobile": 480,
+        "overlay_color": "#000000",
+        "overlay_opacity": 0,
+        "text_color": "#ffffff",
+        "content_position": "middle",
+        "text_alignment": "center",
+        "button_style": "outline",
+        "button_background": "#ed117c",
+        "button_text_color": "#ffffff",
+        "button_border_color": "#ed117c"
+      }
+    }
+  },
+  "order": ["ao_hero"]
+}

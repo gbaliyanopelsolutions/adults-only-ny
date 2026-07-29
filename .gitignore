@@ -1,0 +1,24 @@
+# Figma decode scratch work (contains a 1.6GB .fig source file)
+design/
+
+# Dependencies
+node_modules/
+
+# Shopify CLI
+.shopify/
+*.zip
+
+# Local editor / tooling state
+.claude/settings.local.json
+.vscode/
+.idea/
+
+# OS cruft
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*

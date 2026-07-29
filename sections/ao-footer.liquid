@@ -1,0 +1,337 @@
+{{ 'ao-base.css' | asset_url | stylesheet_tag }}
+
+{%- liquid
+  assign t = section.settings
+-%}
+
+{%- style -%}
+  #ao-footer-{{ section.id }} {
+    --ao-f-bg: {{ t.background_color }};
+    --ao-f-fg: {{ t.text_color }};
+    --ao-f-heading: {{ t.heading_color }};
+    --ao-f-accent: {{ t.accent_color }};
+    --ao-f-input-bg: {{ t.input_background }};
+    --ao-f-input-fg: {{ t.input_text_color }};
+    --ao-f-pad-y-d: {{ t.padding_vertical }}px;
+    --ao-f-pad-x-d: {{ t.padding_horizontal }}px;
+    --ao-f-pad-y-m: {{ t.padding_vertical_mobile }}px;
+    --ao-f-pad-x-m: {{ t.padding_horizontal_mobile }}px;
+  }
+  {%- if t.heading_font != blank -%}
+    {{ t.heading_font | font_face: font_display: 'swap' }}
+    #ao-footer-{{ section.id }} .ao-footer__nl-heading,
+    #ao-footer-{{ section.id }} .ao-footer__follow-heading { font-family: {{ t.heading_font.family }}, {{ t.heading_font.fallback_families }}; }
+  {%- endif -%}
+  {%- if t.body_font != blank -%}
+    {{ t.body_font | font_face: font_display: 'swap' }}
+    #ao-footer-{{ section.id }} { font-family: {{ t.body_font.family }}, {{ t.body_font.fallback_families }}; }
+  {%- endif -%}
+{%- endstyle -%}
+
+<div id="ao-footer-{{ section.id }}">
+  <footer class="ao-footer" role="contentinfo">
+    <div class="ao-footer__top">
+      {%- comment -%} Newsletter {%- endcomment -%}
+      {%- if t.newsletter_enable -%}
+        <div class="ao-footer__newsletter">
+          {%- if t.newsletter_heading != blank -%}
+            <h2 class="ao-footer__nl-heading">{{ t.newsletter_heading }}</h2>
+          {%- endif -%}
+          {%- form 'customer', id: 'ao-newsletter-form', class: 'ao-footer__nl-form' -%}
+            <input type="hidden" name="contact[tags]" value="newsletter">
+            <div class="ao-footer__nl-row">
+              <label class="visually-hidden" for="ao-nl-{{ section.id }}">{{ t.newsletter_placeholder }}</label>
+              <input
+                id="ao-nl-{{ section.id }}"
+                type="email"
+                name="contact[email]"
+                class="ao-footer__nl-input"
+                value="{{ form.email }}"
+                placeholder="{{ t.newsletter_placeholder }}"
+                autocomplete="email"
+                required
+              >
+              <button type="submit" class="ao-footer__nl-button">{{ t.newsletter_button_label | default: 'SIGN UP' }}</button>
+            </div>
+            {%- if form.posted_successfully? -%}
+              <p class="ao-footer__nl-note ao-footer__nl-note--success">{{ t.newsletter_success | default: 'Thanks for subscribing.' }}</p>
+            {%- elsif form.errors -%}
+              <p class="ao-footer__nl-note ao-footer__nl-note--error">{{ form.errors.translated_fields.email | capitalize }} {{ form.errors.messages.email }}</p>
+            {%- endif -%}
+            {%- if t.newsletter_terms != blank -%}
+              <div class="ao-footer__nl-terms">{{ t.newsletter_terms }}</div>
+            {%- endif -%}
+          {%- endform -%}
+        </div>
+      {%- endif -%}
+
+      {%- comment -%} Link columns (blocks) {%- endcomment -%}
+      {%- assign column_blocks = section.blocks | where: 'type', 'column' -%}
+      {%- if column_blocks.size > 0 -%}
+        <div class="ao-footer__columns">
+          {%- for block in column_blocks -%}
+            <div class="ao-footer__col{% if block.settings.collapse_on_mobile %} ao-footer__col--collapsible{% endif %}" {{ block.shopify_attributes }}>
+              <button
+                type="button"
+                class="ao-footer__col-head"
+                aria-expanded="false"
+                aria-controls="ao-col-{{ block.id }}"
+              >
+                <span class="ao-footer__col-title">{{ block.settings.heading }}</span>
+                <span class="ao-footer__col-arrow" aria-hidden="true">{{- 'icon-caret.svg' | inline_asset_content -}}</span>
+              </button>
+              <div class="ao-footer__col-body" id="ao-col-{{ block.id }}">
+                <ul class="ao-footer__col-list" role="list">
+                  {%- if block.settings.menu != blank -%}
+                    {%- for link in block.settings.menu.links -%}
+                      <li><a href="{{ link.url }}" class="ao-footer__col-link">{{ link.title }}</a></li>
+                    {%- endfor -%}
+                  {%- endif -%}
+                </ul>
+              </div>
+            </div>
+          {%- endfor -%}
+        </div>
+      {%- endif -%}
+
+      {%- comment -%} Follow us {%- endcomment -%}
+      {%- if t.show_follow -%}
+        <div class="ao-footer__follow">
+          {%- if t.follow_heading != blank -%}
+            <h2 class="ao-footer__follow-heading">{{ t.follow_heading }}</h2>
+          {%- endif -%}
+          {%- render 'social-icons', class: 'ao-footer__social' -%}
+        </div>
+      {%- endif -%}
+    </div>
+
+    {%- comment -%} Bottom: logo + copyright {%- endcomment -%}
+    <div class="ao-footer__bottom">
+      {%- if t.logo != blank -%}
+        <a href="{{ routes.root_url }}" class="ao-footer__logo" aria-label="{{ shop.name }}">
+          {{ t.logo | image_url: width: 400 | image_tag: class: 'ao-footer__logo-img', widths: '120,200,300,400', alt: shop.name, loading: 'lazy' }}
+        </a>
+      {%- elsif t.logo_text != blank -%}
+        <a href="{{ routes.root_url }}" class="ao-footer__logo ao-footer__logo--text" aria-label="{{ shop.name }}">{{ t.logo_text }}</a>
+      {%- endif -%}
+      {%- if t.copyright != blank -%}
+        <p class="ao-footer__copyright">{{ t.copyright }}</p>
+      {%- endif -%}
+    </div>
+  </footer>
+</div>
+
+{% stylesheet %}
+.ao-footer {
+  background: var(--ao-f-bg, #000);
+  color: var(--ao-f-fg, #fafafa);
+  padding: var(--ao-f-pad-y-m) var(--ao-f-pad-x-m);
+  box-shadow: 0 -4px 8px rgba(250, 250, 250, 0.24);
+}
+.ao-footer a { color: inherit; text-decoration: none; }
+.ao-footer a:hover { color: var(--ao-f-accent, #ed117c); }
+
+.ao-footer__top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "news" "cols" "follow";
+  gap: 56px;
+}
+.ao-footer__newsletter { grid-area: news; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.ao-footer__columns { grid-area: cols; }
+.ao-footer__follow { grid-area: follow; display: flex; flex-direction: column; gap: 16px; }
+
+/* Newsletter */
+.ao-footer__nl-heading { margin: 0; font-size: 24px; font-weight: 700; color: var(--ao-f-heading, #fafafa); text-transform: uppercase; letter-spacing: 0.02em; }
+.ao-footer__nl-form { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.ao-footer__nl-row { display: flex; align-items: stretch; gap: 8px; min-width: 0; }
+.ao-footer__nl-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  background: var(--ao-f-input-bg, #fafafa);
+  color: var(--ao-f-input-fg, #1a1a1a);
+  border: 0;
+  border-radius: var(--ao-radius);
+  padding: 14px 16px;
+  font-size: 18px;
+  font-family: inherit;
+}
+.ao-footer__nl-input::placeholder { color: var(--ao-f-input-fg, #1a1a1a); opacity: 0.7; }
+.ao-footer__nl-button {
+  flex: 0 0 auto;
+  background: transparent;
+  color: var(--ao-f-fg, #fafafa);
+  border: 2px solid var(--ao-f-accent, #ed117c);
+  border-radius: var(--ao-radius);
+  padding: 14px 20px;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.ao-footer__nl-button:hover { background: var(--ao-f-accent, #ed117c); color: #fff; }
+.ao-footer__nl-terms { font-size: 14px; opacity: 0.9; }
+.ao-footer__nl-terms a { text-decoration: underline; }
+.ao-footer__nl-note { margin: 0; font-size: 14px; }
+.ao-footer__nl-note--success { color: #7ed957; }
+.ao-footer__nl-note--error { color: #ff6b6b; }
+
+/* Follow us */
+.ao-footer__follow-heading { margin: 0; font-size: 24px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; }
+.ao-footer .ao-footer__social { display: flex; gap: 24px; list-style: none; margin: 0; padding: 0; align-items: center; }
+.ao-footer .ao-footer__social .list-social__item { margin: 0; }
+.ao-footer .ao-footer__social .list-social__link { padding: 0; }
+.ao-footer .ao-footer__social svg { width: 28px; height: 28px; }
+.ao-footer .ao-footer__social svg path { fill: currentColor; }
+
+/* Columns */
+.ao-footer__columns { display: flex; flex-direction: column; gap: 0; }
+.ao-footer__col { border-top: 1px solid rgba(250, 250, 250, 0.15); }
+.ao-footer__col:last-child { border-bottom: 1px solid rgba(250, 250, 250, 0.15); }
+.ao-footer__col-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  padding: 16px 0;
+  font: inherit;
+  text-align: left;
+}
+.ao-footer__col-title { font-size: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.ao-footer__col-arrow { display: inline-flex; transition: transform 0.25s ease; }
+.ao-footer__col-arrow svg { width: 16px; height: 16px; }
+.ao-footer__col-arrow svg path { fill: currentColor; }
+.ao-footer__col-head[aria-expanded="true"] .ao-footer__col-arrow { transform: rotate(180deg); }
+.ao-footer__col-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.25s ease;
+}
+.ao-footer__col-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+.ao-footer__col.is-open .ao-footer__col-body { grid-template-rows: 1fr; }
+.ao-footer__col.is-open .ao-footer__col-list { padding-bottom: 12px; }
+.ao-footer__col-link { display: block; padding: 8px 0; font-size: 14px; font-weight: 600; }
+
+/* Bottom */
+.ao-footer__bottom {
+  margin-top: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+.ao-footer__logo-img { display: block; width: 68px; height: auto; }
+.ao-footer__logo--text { font-size: 28px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+.ao-footer__copyright { margin: 0; font-size: 14px; opacity: 0.9; }
+
+/* Tablet & up */
+@media screen and (min-width: 750px) {
+  .ao-footer { padding: var(--ao-f-pad-y-d) 48px; }
+  .ao-footer__columns { flex-direction: row; gap: 40px; }
+  .ao-footer__col { flex: 1; border: 0 !important; }
+  .ao-footer__col-head { cursor: default; padding: 0 0 16px; }
+  .ao-footer__col-arrow { display: none; }
+  .ao-footer__col-body { grid-template-rows: 1fr; }
+  .ao-footer__col-list { padding-bottom: 0 !important; }
+  .ao-footer__nl-heading, .ao-footer__follow-heading { font-size: 24px; }
+}
+@media screen and (min-width: 990px) {
+  .ao-footer { padding-left: var(--ao-f-pad-x-d); padding-right: var(--ao-f-pad-x-d); }
+  .ao-footer__top {
+    grid-template-columns: minmax(320px, 536px) minmax(0, 1fr);
+    grid-template-areas:
+      "news cols"
+      "follow cols";
+    column-gap: 48px;
+    row-gap: 40px;
+  }
+  .ao-footer__columns { gap: 40px; }
+}
+{% endstylesheet %}
+
+<script src="{{ 'ao-footer.js' | asset_url }}" defer="defer"></script>
+
+{% schema %}
+{
+  "name": "AO Footer",
+  "tag": "footer",
+  "class": "ao-footer-section",
+  "settings": [
+    { "type": "header", "content": "Newsletter" },
+    { "type": "checkbox", "id": "newsletter_enable", "label": "Show newsletter", "default": true },
+    { "type": "text", "id": "newsletter_heading", "label": "Heading", "default": "SIGN UP FOR UPDATES" },
+    { "type": "text", "id": "newsletter_placeholder", "label": "Input placeholder", "default": "Email address" },
+    { "type": "text", "id": "newsletter_button_label", "label": "Button label", "default": "SIGN UP" },
+    { "type": "richtext", "id": "newsletter_terms", "label": "Terms text", "default": "<p>By signing up, you agree to our Terms</p>" },
+    { "type": "text", "id": "newsletter_success", "label": "Success message", "default": "Thanks for subscribing." },
+
+    { "type": "header", "content": "Follow us" },
+    { "type": "checkbox", "id": "show_follow", "label": "Show follow us", "default": true },
+    { "type": "text", "id": "follow_heading", "label": "Heading", "default": "FOLLOW US" },
+    { "type": "paragraph", "content": "Set social links in Theme settings → Social media." },
+
+    { "type": "header", "content": "Logo & copyright" },
+    { "type": "image_picker", "id": "logo", "label": "Logo image" },
+    { "type": "text", "id": "logo_text", "label": "Logo text (if no image)", "default": "AO" },
+    { "type": "text", "id": "copyright", "label": "Copyright line", "default": "© 2025 ADULTS ONLY | All rights reserved | Privacy and Cookies Policy | Terms and conditions" },
+
+    { "type": "header", "content": "Colors" },
+    { "type": "color", "id": "background_color", "label": "Background", "default": "#000000" },
+    { "type": "color", "id": "text_color", "label": "Text", "default": "#fafafa" },
+    { "type": "color", "id": "heading_color", "label": "Headings", "default": "#fafafa" },
+    { "type": "color", "id": "accent_color", "label": "Accent (buttons, hover)", "default": "#ed117c" },
+    { "type": "color", "id": "input_background", "label": "Input background", "default": "#fafafa" },
+    { "type": "color", "id": "input_text_color", "label": "Input text", "default": "#1a1a1a" },
+
+    { "type": "header", "content": "Typography" },
+    { "type": "font_picker", "id": "heading_font", "label": "Heading font", "default": "montserrat_n7" },
+    { "type": "font_picker", "id": "body_font", "label": "Body font", "default": "noto_sans_n4" },
+
+    { "type": "header", "content": "Spacing — desktop" },
+    { "type": "range", "id": "padding_vertical", "min": 20, "max": 120, "step": 4, "unit": "px", "label": "Padding top/bottom", "default": 48 },
+    { "type": "range", "id": "padding_horizontal", "min": 0, "max": 200, "step": 4, "unit": "px", "label": "Padding left/right", "default": 160 },
+
+    { "type": "header", "content": "Spacing — mobile" },
+    { "type": "range", "id": "padding_vertical_mobile", "min": 16, "max": 80, "step": 4, "unit": "px", "label": "Padding top/bottom", "default": 32 },
+    { "type": "range", "id": "padding_horizontal_mobile", "min": 0, "max": 40, "step": 2, "unit": "px", "label": "Padding left/right", "default": 24 }
+  ],
+  "blocks": [
+    {
+      "type": "column",
+      "name": "Link column",
+      "settings": [
+        { "type": "text", "id": "heading", "label": "Heading", "default": "THE BRAND" },
+        { "type": "link_list", "id": "menu", "label": "Menu" },
+        { "type": "checkbox", "id": "collapse_on_mobile", "label": "Collapse on mobile", "default": true }
+      ]
+    }
+  ],
+  "max_blocks": 4,
+  "presets": [
+    {
+      "name": "AO Footer",
+      "blocks": [
+        { "type": "column", "settings": { "heading": "THE BRAND" } },
+        { "type": "column", "settings": { "heading": "SUPPORT" } },
+        { "type": "column", "settings": { "heading": "MEDIA" } }
+      ]
+    }
+  ],
+  "enabled_on": { "groups": ["footer"] }
+}
+{% endschema %}
