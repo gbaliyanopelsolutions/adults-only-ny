@@ -14,6 +14,7 @@
     "ao-header": {
       "type": "ao-header",
       "settings": {
+        "logo": "shopify://shop_images/AO__Logo_Registrec.png",
         "logo_width": 85,
         "logo_width_mobile": 60,
         "logo_text_top": "AO",
@@ -21,6 +22,7 @@
         "logo_font": "montserrat_n7",
         "menu": "main-menu",
         "show_menu_icon": true,
+        "menu_label": "",
         "drawer_heading": "MENU",
         "show_search": false,
         "show_account": false,
@@ -50,8 +52,12 @@
         "menu": "main-menu",
         "menu_type_desktop": "drawer",
         "sticky_header_type": "on-scroll-up",
+        "show_line_separator": true,
         "color_scheme": "scheme-b9854e27-2b20-4eeb-8683-4c627e902978",
         "menu_color_scheme": "scheme-b9854e27-2b20-4eeb-8683-4c627e902978",
+        "enable_country_selector": false,
+        "enable_language_selector": false,
+        "enable_customer_avatar": true,
         "mobile_logo_position": "center",
         "margin_bottom": 0,
         "padding_top": 20,
@@ -59,5 +65,8 @@
       }
     }
   },
-  "order": ["ao-header", "header"]
+  "order": [
+    "ao-header",
+    "header"
+  ]
 }
