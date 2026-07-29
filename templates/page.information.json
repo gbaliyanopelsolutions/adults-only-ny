@@ -11,11 +11,33 @@
   "sections": {
     "main": {
       "type": "ao-info-page",
+      "blocks": {
+        "text_izyDXM": {
+          "type": "text",
+          "settings": {
+            "heading": "Share the details of this section.",
+            "text": "<p>Share the details of this section.</p>"
+          }
+        },
+        "image_fg93pq": {
+          "type": "image",
+          "settings": {
+            "image": "shopify://shop_images/AO__Logo_Registrec.png",
+            "caption": ""
+          }
+        }
+      },
+      "block_order": [
+        "text_izyDXM",
+        "image_fg93pq"
+      ],
       "settings": {
-        "tagline": "I AM NOT RESPONSIBLE FOR YOUR PERCEPTION OF ME",
-        "show_title": true,
         "logo_width": 137,
         "logo_width_mobile": 77,
+        "tagline": "I AM NOT RESPONSIBLE FOR YOUR PERCEPTION OF ME",
+        "show_title": true,
+        "title_override": "",
+        "body_override": "",
         "text_alignment": "center",
         "content_max_width": 1120,
         "background_color": "#000000",
@@ -38,5 +60,7 @@
       }
     }
   },
-  "order": ["main"]
+  "order": [
+    "main"
+  ]
 }
