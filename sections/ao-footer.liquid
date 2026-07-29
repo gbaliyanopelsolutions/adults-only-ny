@@ -111,8 +111,11 @@
         <a href="{{ routes.root_url }}" class="ao-footer__logo" aria-label="{{ shop.name }}">
           {{ t.logo | image_url: width: 400 | image_tag: class: 'ao-footer__logo-img', widths: '120,200,300,400', alt: shop.name, loading: 'lazy' }}
         </a>
-      {%- elsif t.logo_text != blank -%}
-        <a href="{{ routes.root_url }}" class="ao-footer__logo ao-footer__logo--text" aria-label="{{ shop.name }}">{{ t.logo_text }}</a>
+      {%- else -%}
+        {%- comment -%} Bundled AO lockup, matching the crest in the design. {%- endcomment -%}
+        <a href="{{ routes.root_url }}" class="ao-footer__logo" aria-label="{{ shop.name }}">
+          <span class="ao-footer__logo-svg">{{- 'ao-logo.svg' | inline_asset_content -}}</span>
+        </a>
       {%- endif -%}
       {%- if t.copyright != blank -%}
         <p class="ao-footer__copyright">{{ t.copyright }}</p>
@@ -239,6 +242,8 @@
   text-align: center;
 }
 .ao-footer__logo-img { display: block; width: 85px; height: auto; }
+.ao-footer__logo-svg { display: block; width: 85px; color: inherit; }
+.ao-footer__logo-svg svg { display: block; width: 100%; height: auto; }
 .ao-footer__logo--text { font-size: 28px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
 .ao-footer__copyright { margin: 0; font-size: 12px; font-weight: 600; line-height: 1.5; }
 
@@ -271,6 +276,7 @@
   .ao-footer__nl-button { min-height: 64px; font-size: 20px; }
   .ao-footer__bottom { margin-top: 64px; gap: 24px; }
   .ao-footer__logo-img { width: 111px; }
+  .ao-footer__logo-svg { width: 111px; }
   .ao-footer__copyright { font-size: 14px; }
 }
 {% endstylesheet %}

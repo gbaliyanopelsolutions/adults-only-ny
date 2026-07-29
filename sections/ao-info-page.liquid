@@ -56,19 +56,24 @@
   <div class="ao-info__inner">
     {%- comment -%} Masthead: logo, tagline, title, intro copy {%- endcomment -%}
     <div class="ao-info__masthead">
-      {%- if t.logo != blank -%}
+      {%- if t.show_logo -%}
         <div class="ao-info__logo">
-          {%- capture logo_sizes -%}{{ t.logo_width }}px{%- endcapture -%}
-          {{
-            t.logo
-            | image_url: width: 600
-            | image_tag:
-              class: 'ao-info__logo-img',
-              widths: '160, 240, 320, 480, 600',
-              sizes: logo_sizes,
-              alt: t.tagline | default: shop.name,
-              loading: 'eager'
-          }}
+          {%- if t.logo != blank -%}
+            {%- capture logo_sizes -%}{{ t.logo_width }}px{%- endcapture -%}
+            {{
+              t.logo
+              | image_url: width: 600
+              | image_tag:
+                class: 'ao-info__logo-img',
+                widths: '160, 240, 320, 480, 600',
+                sizes: logo_sizes,
+                alt: t.tagline | default: shop.name,
+                loading: 'eager'
+            }}
+          {%- else -%}
+            {%- comment -%} Bundled AO lockup, matching the crest in the design. {%- endcomment -%}
+            <span class="ao-info__logo-svg">{{- 'ao-logo.svg' | inline_asset_content -}}</span>
+          {%- endif -%}
         </div>
       {%- endif -%}
 
@@ -166,6 +171,8 @@
   width: var(--ao-info-logo-w-m);
   height: auto;
 }
+.ao-info__logo-svg { display: block; width: var(--ao-info-logo-w-m); color: inherit; }
+.ao-info__logo-svg svg { display: block; width: 100%; height: auto; }
 
 .ao-info__tagline {
   margin: 0;
@@ -288,7 +295,8 @@
     gap: 20px;
   }
   .ao-info__masthead { gap: 20px; }
-  .ao-info__logo-img { width: calc((var(--ao-info-logo-w-d) + var(--ao-info-logo-w-m)) / 2); }
+  .ao-info__logo-img,
+  .ao-info__logo-svg { width: calc((var(--ao-info-logo-w-d) + var(--ao-info-logo-w-m)) / 2); }
   .ao-info__tagline,
   .ao-info__block-heading { font-size: calc((var(--ao-info-tagline-d) + var(--ao-info-tagline-m)) / 2); }
   .ao-info__title { font-size: calc((var(--ao-info-title-d) + var(--ao-info-title-m)) / 2); }
@@ -305,7 +313,8 @@
     gap: 24px;
   }
   .ao-info__masthead { gap: 24px; }
-  .ao-info__logo-img { width: var(--ao-info-logo-w-d); }
+  .ao-info__logo-img,
+  .ao-info__logo-svg { width: var(--ao-info-logo-w-d); }
   .ao-info__tagline,
   .ao-info__block-heading { font-size: var(--ao-info-tagline-d); }
   .ao-info__title { font-size: var(--ao-info-title-d); }
@@ -328,7 +337,8 @@
   "class": "ao-info-section",
   "settings": [
     { "type": "header", "content": "Masthead" },
-    { "type": "image_picker", "id": "logo", "label": "Logo / crest image" },
+    { "type": "checkbox", "id": "show_logo", "label": "Show logo / crest", "default": true },
+    { "type": "image_picker", "id": "logo", "label": "Logo / crest image", "info": "Leave blank to use the bundled AO lockup." },
     { "type": "range", "id": "logo_width", "min": 60, "max": 160, "step": 1, "unit": "px", "label": "Logo width (desktop)", "default": 137 },
     { "type": "range", "id": "logo_width_mobile", "min": 40, "max": 140, "step": 1, "unit": "px", "label": "Logo width (mobile)", "default": 77 },
     { "type": "text", "id": "tagline", "label": "Tagline", "default": "I AM NOT RESPONSIBLE FOR YOUR PERCEPTION OF ME" },

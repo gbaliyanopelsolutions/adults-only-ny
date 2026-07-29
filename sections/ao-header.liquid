@@ -79,12 +79,11 @@
               loading: 'eager'
           }}
         {%- else -%}
-          <span class="ao-header__logo-text">
-            <span class="ao-header__logo-mark">{{ t.logo_text_top | default: 'AO' }}</span>
-            {%- if t.logo_text_bottom != blank -%}
-              <span class="ao-header__logo-word">{{ t.logo_text_bottom }}</span>
-            {%- endif -%}
-          </span>
+          {%- comment -%}
+            Fall back to the bundled AO lockup rather than text, so the header
+            matches the design before a merchant uploads a logo.
+          {%- endcomment -%}
+          <span class="ao-header__logo-svg">{{- 'ao-logo.svg' | inline_asset_content -}}</span>
         {%- endif -%}
       </a>
     </div>
@@ -207,6 +206,8 @@
 
 .ao-header__logo { display: inline-flex; text-decoration: none; color: inherit; }
 .ao-header__logo-img { display: block; width: var(--ao-logo-w-m); height: auto; }
+.ao-header__logo-svg { display: block; width: var(--ao-logo-w-m); color: inherit; }
+.ao-header__logo-svg svg { display: block; width: 100%; height: auto; }
 .ao-header__logo-text {
   display: inline-flex;
   flex-direction: column;
@@ -295,6 +296,7 @@
   }
   .ao-header__menu-label { font-size: var(--ao-h-link-size); }
   .ao-header__logo-img { width: var(--ao-logo-w-d); }
+  .ao-header__logo-svg { width: var(--ao-logo-w-d); }
   .ao-header__logo-mark { font-size: calc(var(--ao-logo-w-d) * 0.5); }
   .ao-header__logo-word { font-size: calc(var(--ao-logo-w-d) * 0.11); }
   .ao-header__link { font-size: var(--ao-h-link-size); }
