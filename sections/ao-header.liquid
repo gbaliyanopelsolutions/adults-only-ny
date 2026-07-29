@@ -145,6 +145,10 @@
 {% stylesheet %}
 .ao-header {
   --ao-h-font: var(--font-body-family, sans-serif);
+  /* <ao-header> is a custom element: without this it defaults to display:inline,
+     which drops width:100% and collapses the background on any page where the
+     header is not absolutely positioned (i.e. everywhere except the homepage). */
+  display: block;
   position: relative;
   z-index: 30;
   width: 100%;
