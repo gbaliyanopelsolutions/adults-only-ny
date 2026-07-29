@@ -12,6 +12,8 @@
     "ao_hero": {
       "type": "ao-hero",
       "settings": {
+        "video": "shopify://files/videos/AO_Homepage_Hero Video_v2.mp4",
+        "video_url": "",
         "autoplay": true,
         "loop": true,
         "full_viewport": false,
@@ -20,9 +22,15 @@
         "height_mobile": 480,
         "overlay_color": "#000000",
         "overlay_opacity": 0,
+        "subheading": "",
+        "heading": "",
+        "heading_font": "montserrat_n7",
+        "heading_size": 64,
         "text_color": "#ffffff",
         "content_position": "middle",
         "text_alignment": "center",
+        "button_label": "",
+        "button_link": "",
         "button_style": "outline",
         "button_background": "#ed117c",
         "button_text_color": "#ffffff",
@@ -30,5 +38,7 @@
       }
     }
   },
-  "order": ["ao_hero"]
+  "order": [
+    "ao_hero"
+  ]
 }
