@@ -12,24 +12,24 @@
     "main": {
       "type": "ao-info-page",
       "blocks": {
-        "text_izyDXM": {
-          "type": "text",
-          "settings": {
-            "heading": "Share the details of this section.",
-            "text": "<p>Share the details of this section.</p>"
-          }
-        },
         "image_fg93pq": {
           "type": "image",
           "settings": {
             "image": "shopify://shop_images/AO__Logo_Registrec.png",
             "caption": ""
           }
+        },
+        "text_izyDXM": {
+          "type": "text",
+          "settings": {
+            "heading": "Share the details of this section.",
+            "text": "<p>Share the details of this section.</p>"
+          }
         }
       },
       "block_order": [
-        "text_izyDXM",
-        "image_fg93pq"
+        "image_fg93pq",
+        "text_izyDXM"
       ],
       "settings": {
         "logo_width": 137,
