@@ -6,7 +6,7 @@
       "type": "ao-header",
       "settings": {
         "logo_width": 85,
-        "logo_width_mobile": 68,
+        "logo_width_mobile": 60,
         "logo_text_top": "AO",
         "logo_text_bottom": "ADULTS ONLY",
         "logo_font": "montserrat_n7",
