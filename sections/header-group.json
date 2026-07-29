@@ -50,5 +50,5 @@
       }
     }
   },
-  "order": ["ao-header"]
+  "order": ["ao-header", "header"]
 }
