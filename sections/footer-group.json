@@ -34,7 +34,7 @@
           "type": "column",
           "settings": {
             "heading": "MEDIA",
-            "menu": "",
+            "menu": "media",
             "collapse_on_mobile": true
           }
         }
