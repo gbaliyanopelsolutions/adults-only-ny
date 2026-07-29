@@ -16,18 +16,34 @@
       "blocks": {
         "brand": {
           "type": "column",
-          "settings": { "heading": "THE BRAND", "menu": "footer", "collapse_on_mobile": true }
+          "settings": {
+            "heading": "THE BRAND",
+            "menu": "footer",
+            "collapse_on_mobile": true
+          }
         },
         "support": {
           "type": "column",
-          "settings": { "heading": "SUPPORT", "collapse_on_mobile": true }
+          "settings": {
+            "heading": "SUPPORT",
+            "menu": "support",
+            "collapse_on_mobile": true
+          }
         },
         "media": {
           "type": "column",
-          "settings": { "heading": "MEDIA", "collapse_on_mobile": true }
+          "settings": {
+            "heading": "MEDIA",
+            "menu": "",
+            "collapse_on_mobile": true
+          }
         }
       },
-      "block_order": ["brand", "support", "media"],
+      "block_order": [
+        "brand",
+        "support",
+        "media"
+      ],
       "settings": {
         "newsletter_enable": true,
         "newsletter_heading": "SIGN UP FOR UPDATES",
@@ -59,7 +75,11 @@
       "settings": {
         "color_scheme": "scheme-4",
         "newsletter_enable": false,
+        "newsletter_heading": "Subscribe to our emails",
+        "enable_follow_on_shop": true,
         "show_social": true,
+        "enable_country_selector": true,
+        "enable_language_selector": true,
         "payment_enable": true,
         "show_policy": true,
         "margin_top": 0,
@@ -68,5 +88,8 @@
       }
     }
   },
-  "order": ["ao-footer", "footer"]
+  "order": [
+    "ao-footer",
+    "footer"
+  ]
 }
