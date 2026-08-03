@@ -1,0 +1,58 @@
+{
+  "sections": {
+    "main": {
+      "type": "ao-gallery",
+      "blocks": {
+        "heading-1": {
+          "type": "heading",
+          "settings": { "heading": "LOREM IPSUM" }
+        },
+        "card-1": {
+          "type": "card",
+          "settings": { "title": "Lorem Ipsum Resti", "text": "<p>Sorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis.</p>", "date": "02/08/2025", "button_label": "READ" }
+        },
+        "card-2": {
+          "type": "card",
+          "settings": { "title": "Lorem Ipsum Resti", "text": "<p>Sorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis.</p>", "date": "02/08/2025", "button_label": "READ" }
+        },
+        "card-3": {
+          "type": "card",
+          "settings": { "title": "Lorem Ipsum Resti", "text": "<p>Sorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis.</p>", "date": "02/08/2025", "button_label": "READ" }
+        },
+        "card-4": {
+          "type": "card",
+          "settings": { "title": "Lorem Ipsum Resti", "text": "<p>Sorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis.</p>", "date": "02/08/2025", "button_label": "READ" }
+        },
+        "feature-1": {
+          "type": "feature",
+          "settings": { "title": "Lorem Ipsum Resti", "caption": "Sorem ipsum dolor sit amet, consectetur adipiscing elit." }
+        },
+        "feature-2": {
+          "type": "feature",
+          "settings": { "title": "Lorem Ipsum Resti", "caption": "Sorem ipsum dolor sit amet, consectetur adipiscing elit." }
+        }
+      },
+      "block_order": ["heading-1", "card-1", "card-2", "card-3", "card-4", "feature-1", "feature-2"],
+      "settings": {
+        "show_crest": true,
+        "crest_width": 137,
+        "crest_width_mobile": 77,
+        "tagline": "WE CREATE PIECES THAT CAPTIVATE, PROVOKE, AND CHALLENGE",
+        "title": "GALLERY",
+        "body": "<p>Welcome to the Archive of the Bold. This gallery collects the tactile imagery and defiant aesthetics that inform our design philosophy. Rooted in artistic tension, every frame is an exercise in sensual confidence and creative rebellion. We invite you to explore the visual narrative and find the mood that dictates your next acquisition.</p>",
+        "empty_text": "The archive is being hung. Check back soon.",
+        "background_color": "#000000",
+        "text_color": "#ffffff",
+        "accent_color": "#ed117c",
+        "heading_font": "montserrat_n7",
+        "body_font": "noto_sans_n4",
+        "content_max_width": 1120,
+        "padding_top": 128,
+        "padding_bottom": 96,
+        "padding_top_mobile": 96,
+        "padding_bottom_mobile": 64
+      }
+    }
+  },
+  "order": ["main"]
+}

@@ -1,0 +1,265 @@
+{{ 'ao-base.css' | asset_url | stylesheet_tag }}
+{{ 'ao-pages.css' | asset_url | stylesheet_tag }}
+
+{%- comment -%}
+  FAQs: a row of category tabs with a pink underline on the active one, then
+  the questions for that category as dark rounded cards.
+
+  Blocks are a flat list — a "category" block opens a group and every
+  "question" block after it belongs to that group. That keeps the merchant's
+  mental model ("drag a question under a category") intact in the editor.
+{%- endcomment -%}
+
+{%- liquid
+  assign t = section.settings
+
+  assign heading = t.title
+  if heading == blank and page.title != blank
+    assign heading = page.title
+  endif
+
+-%}
+
+{% render 'ao-page-style', section: section %}
+
+<div id="ao-{{ section.id }}" class="ao-page ao-faq">
+  <div class="ao-page__inner">
+    {% render 'ao-masthead',
+      show_crest: t.show_crest,
+      crest: t.crest,
+      crest_width: t.crest_width,
+      tagline: t.tagline,
+      title: heading,
+      body: t.body
+    %}
+
+    {%- if section.blocks.size > 0 -%}
+      <div class="ao-faq__body">
+        {%- comment -%} Tabs {%- endcomment -%}
+        <div class="ao-faq__tabs" role="tablist" aria-label="{{ heading | escape }}">
+          {%- assign tab_index = 0 -%}
+          {%- for block in section.blocks -%}
+            {%- if block.type == 'category' -%}
+              {%- assign category_id = block.settings.title | handle -%}
+              <button
+                type="button"
+                class="ao-faq__tab{% if tab_index == 0 %} is-active{% endif %}"
+                role="tab"
+                id="ao-tab-{{ section.id }}-{{ category_id }}"
+                aria-controls="ao-panel-{{ section.id }}-{{ category_id }}"
+                aria-selected="{% if tab_index == 0 %}true{% else %}false{% endif %}"
+                data-ao-faq-tab="{{ category_id }}"
+                {{ block.shopify_attributes }}
+              >
+                {{ block.settings.title }}
+              </button>
+              {%- assign tab_index = tab_index | plus: 1 -%}
+            {%- endif -%}
+          {%- endfor -%}
+        </div>
+
+        {%- comment -%}
+          One panel per category. The inner pass walks the whole block list
+          and keeps the questions that follow this category — that keeps the
+          panel markup properly nested, which opening a <div> inside one loop
+          iteration and closing it in another would not.
+        {%- endcomment -%}
+        {%- assign panel_index = 0 -%}
+        {%- for category in section.blocks -%}
+          {%- if category.type != 'category' -%}
+            {%- continue -%}
+          {%- endif -%}
+          {%- assign category_id = category.settings.title | handle -%}
+          <div
+            class="ao-faq__panel{% if panel_index == 0 %} is-active{% endif %}"
+            role="tabpanel"
+            id="ao-panel-{{ section.id }}-{{ category_id }}"
+            aria-labelledby="ao-tab-{{ section.id }}-{{ category_id }}"
+            data-ao-faq-panel="{{ category_id }}"
+            {% if panel_index > 0 %}hidden{% endif %}
+          >
+            {%- assign walker = '' -%}
+            {%- for block in section.blocks -%}
+              {%- if block.type == 'category' -%}
+                {%- assign walker = block.settings.title | handle -%}
+              {%- elsif block.type == 'question' and walker == category_id -%}
+                <div class="ao-faq__item" {{ block.shopify_attributes }}>
+                  <h3 class="ao-faq__q">{{ block.settings.question }}</h3>
+                  <div class="ao-faq__a rte">{{ block.settings.answer }}</div>
+                </div>
+              {%- endif -%}
+            {%- endfor -%}
+          </div>
+          {%- assign panel_index = panel_index | plus: 1 -%}
+        {%- endfor -%}
+      </div>
+    {%- endif -%}
+  </div>
+</div>
+
+<script>
+  // Tabs are progressive enhancement: without JS every panel is a plain
+  // stacked list, which is still a usable FAQ page.
+  (function () {
+    var root = document.getElementById('ao-{{ section.id }}');
+    if (!root) return;
+
+    var tabs = Array.prototype.slice.call(root.querySelectorAll('[data-ao-faq-tab]'));
+    var panels = Array.prototype.slice.call(root.querySelectorAll('[data-ao-faq-panel]'));
+    if (tabs.length < 2) return;
+
+    function activate(id) {
+      tabs.forEach(function (tab) {
+        var on = tab.dataset.aoFaqTab === id;
+        tab.classList.toggle('is-active', on);
+        tab.setAttribute('aria-selected', String(on));
+      });
+      panels.forEach(function (panel) {
+        var on = panel.dataset.aoFaqPanel === id;
+        panel.classList.toggle('is-active', on);
+        panel.hidden = !on;
+      });
+    }
+
+    tabs.forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        activate(tab.dataset.aoFaqTab);
+      });
+    });
+
+    // Deep link support: /pages/faqs#product-care opens that tab.
+    var hash = window.location.hash.replace('#', '');
+    if (hash && tabs.some(function (tab) { return tab.dataset.aoFaqTab === hash; })) {
+      activate(hash);
+    }
+  })();
+</script>
+
+{% stylesheet %}
+.ao-faq__body {
+  margin-top: 32px;
+}
+.ao-faq__tabs {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  margin-bottom: 40px;
+  /* Let the tab row bleed to the screen edge on mobile so it reads as scrollable */
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+.ao-faq__tabs::-webkit-scrollbar { display: none; }
+.ao-faq__tab {
+  flex: 1 0 auto;
+  padding: 0 8px 8px;
+  border: 0;
+  border-bottom: 4px solid transparent;
+  background: none;
+  color: var(--ao-page-fg);
+  font-family: var(--ao-b);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: center;
+  cursor: pointer;
+}
+.ao-faq__tab.is-active { border-bottom-color: var(--ao-page-accent); }
+.ao-faq__tab:hover { color: var(--ao-page-accent); }
+
+.ao-faq__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.ao-faq__item {
+  padding: 24px;
+  border-radius: 16px;
+  background: var(--ao-surface-2);
+}
+.ao-faq__q {
+  margin: 0 0 16px;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.ao-faq__a {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.ao-faq__a > :first-child { margin-top: 0; }
+.ao-faq__a > :last-child { margin-bottom: 0; }
+.ao-faq__a a { color: var(--ao-page-accent); }
+
+@media screen and (min-width: 750px) {
+  .ao-faq__tabs { gap: 48px; }
+  .ao-faq__tab { font-size: 20px; }
+  .ao-faq__item { padding: 32px 48px 48px; }
+  .ao-faq__q { font-size: 20px; }
+}
+
+@media screen and (min-width: 990px) {
+  .ao-faq__body { margin-top: 32px; }
+  .ao-faq__panel { gap: 48px; }
+}
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "AO FAQs",
+  "tag": "section",
+  "class": "ao-faq-section",
+  "settings": [
+    { "type": "header", "content": "Masthead" },
+    { "type": "checkbox", "id": "show_crest", "label": "Show crest", "default": true },
+    { "type": "image_picker", "id": "crest", "label": "Crest image", "info": "Leave blank to use the bundled AO lockup." },
+    { "type": "range", "id": "crest_width", "min": 60, "max": 200, "step": 1, "unit": "px", "label": "Crest width (desktop)", "default": 137 },
+    { "type": "range", "id": "crest_width_mobile", "min": 40, "max": 140, "step": 1, "unit": "px", "label": "Crest width (mobile)", "default": 77 },
+    { "type": "text", "id": "tagline", "label": "Tagline" },
+    { "type": "text", "id": "title", "label": "Title", "info": "Leave blank to use the page title." },
+    { "type": "richtext", "id": "body", "label": "Intro copy" },
+
+    { "type": "header", "content": "Colors" },
+    { "type": "color", "id": "background_color", "label": "Background", "default": "#000000" },
+    { "type": "color", "id": "text_color", "label": "Text", "default": "#ffffff" },
+    { "type": "color", "id": "accent_color", "label": "Accent", "default": "#ed117c" },
+
+    { "type": "header", "content": "Typography" },
+    { "type": "font_picker", "id": "heading_font", "label": "Heading font", "default": "montserrat_n7" },
+    { "type": "font_picker", "id": "body_font", "label": "Body font", "default": "noto_sans_n4" },
+
+    { "type": "header", "content": "Layout" },
+    { "type": "range", "id": "content_max_width", "min": 600, "max": 1440, "step": 20, "unit": "px", "label": "Content max width", "default": 1120 },
+    { "type": "range", "id": "padding_top", "min": 0, "max": 200, "step": 4, "unit": "px", "label": "Padding top (desktop)", "default": 128 },
+    { "type": "range", "id": "padding_bottom", "min": 0, "max": 200, "step": 4, "unit": "px", "label": "Padding bottom (desktop)", "default": 96 },
+    { "type": "range", "id": "padding_top_mobile", "min": 0, "max": 160, "step": 4, "unit": "px", "label": "Padding top (mobile)", "default": 96 },
+    { "type": "range", "id": "padding_bottom_mobile", "min": 0, "max": 160, "step": 4, "unit": "px", "label": "Padding bottom (mobile)", "default": 64 }
+  ],
+  "blocks": [
+    {
+      "type": "category",
+      "name": "Category tab",
+      "settings": [
+        { "type": "text", "id": "title", "label": "Tab label", "default": "The Brand & Vision" }
+      ]
+    },
+    {
+      "type": "question",
+      "name": "Question",
+      "settings": [
+        { "type": "text", "id": "question", "label": "Question", "default": "Why are production runs so limited?" },
+        { "type": "richtext", "id": "answer", "label": "Answer", "default": "<p>Answer copy.</p>" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "AO FAQs",
+      "blocks": [
+        { "type": "category" },
+        { "type": "question" }
+      ]
+    }
+  ]
+}
+{% endschema %}

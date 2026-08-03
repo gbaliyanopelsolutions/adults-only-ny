@@ -1,0 +1,360 @@
+{{ 'ao-base.css' | asset_url | stylesheet_tag }}
+{{ 'ao-pages.css' | asset_url | stylesheet_tag }}
+
+{%- comment -%}
+  Gift Card purchase page: card artwork beside the recipient fields and the
+  denomination pills, then the terms sections, then one full-width action.
+
+  Denominations come from the variants of the gift card product chosen in the
+  section settings, so the amounts stay in step with what is actually for sale.
+{%- endcomment -%}
+
+{%- liquid
+  assign t = section.settings
+  assign gc = t.product
+  assign current = gc.selected_or_first_available_variant
+
+  assign heading = t.title
+  if heading == blank and page.title != blank
+    assign heading = page.title
+  endif
+
+  assign form_id = 'ao-gc-form-' | append: section.id
+-%}
+
+{% render 'ao-page-style', section: section %}
+
+<div id="ao-{{ section.id }}" class="ao-page ao-gc" data-ao-gift-card>
+  <div class="ao-page__inner">
+    {% render 'ao-masthead',
+      show_crest: t.show_crest,
+      crest: t.crest,
+      crest_width: t.crest_width,
+      tagline: t.tagline,
+      title: heading,
+      body: t.body
+    %}
+
+    <div class="ao-gc__buy">
+      <div class="ao-gc__art">
+        {%- if t.image != blank -%}
+          {{
+            t.image
+            | image_url: width: 1200
+            | image_tag:
+              class: 'ao-gc__art-img',
+              widths: '540, 800, 1200',
+              sizes: '(min-width: 990px) 540px, 90vw',
+              loading: 'eager',
+              alt: heading | escape
+          }}
+        {%- elsif gc.featured_media != blank -%}
+          {{
+            gc.featured_media
+            | image_url: width: 1200
+            | image_tag:
+              class: 'ao-gc__art-img',
+              widths: '540, 800, 1200',
+              sizes: '(min-width: 990px) 540px, 90vw',
+              loading: 'eager',
+              alt: gc.title | escape
+          }}
+        {%- else -%}
+          <div class="ao-gc__art-placeholder"></div>
+        {%- endif -%}
+      </div>
+
+      <div class="ao-gc__form-col">
+        {%- if gc != blank -%}
+          {%- form 'product', gc, id: form_id, class: 'ao-gc__form' -%}
+            <input type="hidden" name="id" value="{{ current.id }}" data-ao-gc-variant>
+            <input type="hidden" name="quantity" value="1">
+
+            <div class="ao-field">
+              <label class="ao-field__label" for="ao-gc-name-{{ section.id }}">
+                {{ t.recipient_name_label | default: 'RECIPIENT NAME' }}
+              </label>
+              <input
+                id="ao-gc-name-{{ section.id }}"
+                class="ao-field__input"
+                type="text"
+                name="properties[Recipient name]"
+                placeholder="{{ t.recipient_name_placeholder | default: 'Text...' }}"
+              >
+            </div>
+
+            <div class="ao-field">
+              <label class="ao-field__label" for="ao-gc-email-{{ section.id }}">
+                {{ t.recipient_email_label | default: 'RECIPIENT EMAIL' }}
+              </label>
+              <input
+                id="ao-gc-email-{{ section.id }}"
+                class="ao-field__input"
+                type="email"
+                name="properties[Recipient email]"
+                placeholder="{{ t.recipient_email_placeholder | default: 'Text...' }}"
+                autocomplete="off"
+              >
+            </div>
+
+            {%- if t.show_message_field -%}
+              <div class="ao-field">
+                <label class="ao-field__label" for="ao-gc-message-{{ section.id }}">
+                  {{ t.message_label | default: 'MESSAGE' }}
+                </label>
+                <textarea
+                  id="ao-gc-message-{{ section.id }}"
+                  class="ao-field__textarea"
+                  name="properties[Message]"
+                  rows="3"
+                  placeholder="{{ t.message_placeholder | default: 'Text...' }}"
+                ></textarea>
+              </div>
+            {%- endif -%}
+
+            {%- comment -%} Denominations — one pill per gift card variant {%- endcomment -%}
+            {%- if gc.variants.size > 1 -%}
+              <fieldset class="ao-gc__amounts">
+                <legend class="visually-hidden">{{ t.amount_label | default: 'Amount' }}</legend>
+                {%- for variant in gc.variants -%}
+                  <label class="ao-gc__amount{% if variant.id == current.id %} is-selected{% endif %}{% unless variant.available %} ao-gc__amount--disabled{% endunless %}">
+                    <input
+                      type="radio"
+                      name="ao-gc-amount"
+                      value="{{ variant.id }}"
+                      data-ao-gc-amount
+                      class="visually-hidden"
+                      {% if variant.id == current.id %}checked{% endif %}
+                      {% unless variant.available %}disabled{% endunless %}
+                    >
+                    <span>{{ variant.price | money }}</span>
+                  </label>
+                {%- endfor -%}
+              </fieldset>
+            {%- endif -%}
+
+            <div class="ao-gc__submit">
+              <button type="submit" name="add" class="ao-btn ao-btn--full" {% unless current.available %}disabled{% endunless %}>
+                {%- if current.available -%}
+                  {{ t.submit_label | default: 'ADD TO CART' }}
+                {%- else -%}
+                  {{ 'products.product.sold_out' | t }}
+                {%- endif -%}
+              </button>
+            </div>
+          {%- endform -%}
+        {%- else -%}
+          <p class="ao-empty">
+            {{ t.no_product_text | default: 'Choose a gift card product in the theme editor to enable purchasing.' }}
+          </p>
+        {%- endif -%}
+      </div>
+    </div>
+
+    {%- if section.blocks.size > 0 -%}
+      <div class="ao-gc__terms">
+        {%- for block in section.blocks -%}
+          <section class="ao-gc__term" {{ block.shopify_attributes }}>
+            {%- if block.settings.heading != blank -%}
+              <h2 class="ao-gc__term-heading">{{ block.settings.heading }}</h2>
+            {%- endif -%}
+            <div class="ao-gc__term-body rte">{{ block.settings.text }}</div>
+          </section>
+        {%- endfor -%}
+      </div>
+    {%- endif -%}
+  </div>
+</div>
+
+<script>
+  // The denomination pills are the real variant picker; keep the hidden id in
+  // step and reflect the choice on the submit button.
+  (function () {
+    var root = document.getElementById('ao-{{ section.id }}');
+    if (!root) return;
+    var idInput = root.querySelector('[data-ao-gc-variant]');
+    var amounts = Array.prototype.slice.call(root.querySelectorAll('[data-ao-gc-amount]'));
+    if (!idInput || !amounts.length) return;
+
+    amounts.forEach(function (input) {
+      input.addEventListener('change', function () {
+        if (!input.checked) return;
+        idInput.value = input.value;
+        // Mirror the checked state onto the label — :has() is not everywhere yet.
+        amounts.forEach(function (other) {
+          var label = other.closest('.ao-gc__amount');
+          if (label) label.classList.toggle('is-selected', other === input);
+        });
+      });
+    });
+  })();
+</script>
+
+{% stylesheet %}
+.ao-gc__buy {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 40px;
+  margin-top: 40px;
+}
+.ao-gc__art {
+  overflow: hidden;
+  border-radius: 26px;
+  background: var(--ao-surface-2);
+}
+.ao-gc__art-img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.ao-gc__art-placeholder {
+  width: 100%;
+  aspect-ratio: 540 / 328;
+  background: linear-gradient(135deg, #1a1a1a, #333333);
+}
+.ao-gc__form {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  margin: 0;
+}
+.ao-gc__amounts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.ao-gc__amount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 8px 32px;
+  border: 1.5px solid var(--ao-page-accent);
+  border-radius: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ao-gc__amount.is-selected,
+.ao-gc__amount:has(input:checked) {
+  background: var(--ao-page-accent);
+  color: var(--ao-off-white, #fafafa);
+}
+.ao-gc__amount:has(input:focus-visible) {
+  outline: 2px solid var(--ao-white, #fff);
+  outline-offset: 2px;
+}
+.ao-gc__amount--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.ao-gc__submit { margin-top: 8px; }
+
+.ao-gc__terms {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  margin-top: 56px;
+}
+.ao-gc__term-heading {
+  margin: 0 0 24px;
+  font-family: var(--ao-h);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+.ao-gc__term-body {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.ao-gc__term-body > :first-child { margin-top: 0; }
+.ao-gc__term-body > :last-child { margin-bottom: 0; }
+.ao-gc__term-body a { color: var(--ao-page-accent); }
+.ao-gc__term-body ul {
+  margin: 0;
+  padding-left: 1.2em;
+}
+.ao-gc__term-body li + li { margin-top: 24px; }
+
+@media screen and (min-width: 990px) {
+  .ao-gc__buy {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 40px;
+    align-items: center;
+    margin-top: 56px;
+  }
+  .ao-gc__terms { gap: 56px; margin-top: 72px; }
+  .ao-gc__term-heading { font-size: 30px; }
+  .ao-gc__term-body { font-size: 20px; }
+}
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "AO Gift Card",
+  "tag": "section",
+  "class": "ao-gc-section",
+  "settings": [
+    { "type": "header", "content": "Masthead" },
+    { "type": "checkbox", "id": "show_crest", "label": "Show crest", "default": true },
+    { "type": "image_picker", "id": "crest", "label": "Crest image", "info": "Leave blank to use the bundled AO lockup." },
+    { "type": "range", "id": "crest_width", "min": 60, "max": 200, "step": 1, "unit": "px", "label": "Crest width (desktop)", "default": 137 },
+    { "type": "range", "id": "crest_width_mobile", "min": 40, "max": 140, "step": 1, "unit": "px", "label": "Crest width (mobile)", "default": 77 },
+    { "type": "text", "id": "tagline", "label": "Tagline", "default": "THE PERFECT INTRODUCTION TO LUXURY" },
+    { "type": "text", "id": "title", "label": "Title", "info": "Leave blank to use the page title." },
+    { "type": "richtext", "id": "body", "label": "Intro copy" },
+
+    { "type": "header", "content": "Product" },
+    { "type": "product", "id": "product", "label": "Gift card product", "info": "Each variant becomes a denomination pill." },
+    { "type": "image_picker", "id": "image", "label": "Card artwork", "info": "Falls back to the product's featured image." },
+    { "type": "text", "id": "submit_label", "label": "Submit label", "default": "ADD TO CART" },
+    { "type": "text", "id": "no_product_text", "label": "No product message", "default": "Choose a gift card product in the theme editor to enable purchasing." },
+
+    { "type": "header", "content": "Recipient fields" },
+    { "type": "text", "id": "recipient_name_label", "label": "Name label", "default": "RECIPIENT NAME" },
+    { "type": "text", "id": "recipient_name_placeholder", "label": "Name placeholder", "default": "Text..." },
+    { "type": "text", "id": "recipient_email_label", "label": "Email label", "default": "RECIPIENT EMAIL" },
+    { "type": "text", "id": "recipient_email_placeholder", "label": "Email placeholder", "default": "Text..." },
+    { "type": "checkbox", "id": "show_message_field", "label": "Show message field", "default": true },
+    { "type": "text", "id": "message_label", "label": "Message label", "default": "MESSAGE" },
+    { "type": "text", "id": "message_placeholder", "label": "Message placeholder", "default": "Text..." },
+
+    { "type": "header", "content": "Colors" },
+    { "type": "color", "id": "background_color", "label": "Background", "default": "#000000" },
+    { "type": "color", "id": "text_color", "label": "Text", "default": "#ffffff" },
+    { "type": "color", "id": "accent_color", "label": "Accent", "default": "#ed117c" },
+
+    { "type": "header", "content": "Typography" },
+    { "type": "font_picker", "id": "heading_font", "label": "Heading font", "default": "montserrat_n7" },
+    { "type": "font_picker", "id": "body_font", "label": "Body font", "default": "noto_sans_n4" },
+
+    { "type": "header", "content": "Layout" },
+    { "type": "range", "id": "content_max_width", "min": 600, "max": 1440, "step": 20, "unit": "px", "label": "Content max width", "default": 1120 },
+    { "type": "range", "id": "padding_top", "min": 0, "max": 200, "step": 4, "unit": "px", "label": "Padding top (desktop)", "default": 144 },
+    { "type": "range", "id": "padding_bottom", "min": 0, "max": 200, "step": 4, "unit": "px", "label": "Padding bottom (desktop)", "default": 96 },
+    { "type": "range", "id": "padding_top_mobile", "min": 0, "max": 160, "step": 4, "unit": "px", "label": "Padding top (mobile)", "default": 96 },
+    { "type": "range", "id": "padding_bottom_mobile", "min": 0, "max": 160, "step": 4, "unit": "px", "label": "Padding bottom (mobile)", "default": 64 }
+  ],
+  "blocks": [
+    {
+      "type": "terms",
+      "name": "Terms section",
+      "settings": [
+        { "type": "text", "id": "heading", "label": "Heading", "default": "THE VALUE" },
+        { "type": "richtext", "id": "text", "label": "Text", "default": "<p>Describe the terms.</p>" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "AO Gift Card",
+      "blocks": [{ "type": "terms" }, { "type": "terms" }]
+    }
+  ]
+}
+{% endschema %}

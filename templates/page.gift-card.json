@@ -1,0 +1,51 @@
+{
+  "sections": {
+    "main": {
+      "type": "ao-gift-card",
+      "blocks": {
+        "value": {
+          "type": "terms",
+          "settings": {
+            "heading": "THE VALUE",
+            "text": "<ul><li>Unrestricted Access: The Gift Card is a privileged key to the entire Adults Only archive, valid across all collections and future drops.</li><li>No Expiration: The value is timeless. This card holds no expiry date and maintains its full value indefinitely.</li><li>Final Sale Status: Gift Cards are non-refundable and cannot be redeemed for cash. Treat this acquisition as a final, deliberate indulgence.</li></ul>"
+          }
+        },
+        "discretion": {
+          "type": "terms",
+          "settings": {
+            "heading": "DIGITAL DISCRETION",
+            "text": "<ul><li>Confidential Delivery: The card is delivered instantly and discreetly via email to the recipient's inbox. No physical paper trail will be generated.</li><li>Privacy Assured: All sender and recipient information is kept strictly confidential. We promise an uninterrupted, private transaction experience.</li><li>How to Redeem: The unique code can be applied at the final checkout stage. Use it to acquire your own slice of confident rebellion.</li></ul>"
+          }
+        }
+      },
+      "block_order": ["value", "discretion"],
+      "settings": {
+        "show_crest": true,
+        "crest_width": 137,
+        "crest_width_mobile": 77,
+        "tagline": "THE PERFECT INTRODUCTION TO LUXURY",
+        "title": "GIFT CARD",
+        "submit_label": "ADD TO CART",
+        "no_product_text": "Choose a gift card product in the theme editor to enable purchasing.",
+        "recipient_name_label": "RECIPIENT NAME",
+        "recipient_name_placeholder": "Text...",
+        "recipient_email_label": "RECIPIENT EMAIL",
+        "recipient_email_placeholder": "Text...",
+        "show_message_field": true,
+        "message_label": "MESSAGE",
+        "message_placeholder": "Text...",
+        "background_color": "#000000",
+        "text_color": "#ffffff",
+        "accent_color": "#ed117c",
+        "heading_font": "montserrat_n7",
+        "body_font": "noto_sans_n4",
+        "content_max_width": 1120,
+        "padding_top": 144,
+        "padding_bottom": 96,
+        "padding_top_mobile": 96,
+        "padding_bottom_mobile": 64
+      }
+    }
+  },
+  "order": ["main"]
+}

@@ -1,0 +1,83 @@
+{
+  "sections": {
+    "main": {
+      "type": "ao-faq",
+      "blocks": {
+        "cat-brand": {
+          "type": "category",
+          "settings": { "title": "The Brand & Vision" }
+        },
+        "q-limited": {
+          "type": "question",
+          "settings": {
+            "question": "Why are production runs so limited?",
+            "answer": "<p>Adults Only operates on limited production runs to ensure the integrity of the design and the exclusivity of the piece. This scarcity creates a sense of rare, uncompromised luxury that defines our status as \"gallery wear.\"</p>"
+          }
+        },
+        "q-authenticity": {
+          "type": "question",
+          "settings": {
+            "question": "How do I confirm my product's authenticity?",
+            "answer": "<p>Every item is accompanied by a unique digital authentication ID. This ensures the integrity of the piece and validates your ownership of a scarce, authentic garment.</p>"
+          }
+        },
+        "q-seasonal": {
+          "type": "question",
+          "settings": {
+            "question": "Are new collections released seasonally?",
+            "answer": "<p>Our releases are dictated by inspiration, not calendar. Collections drop when the art is complete. Sign up for confidential updates to receive immediate notification of our next expression.</p>"
+          }
+        },
+        "cat-order": {
+          "type": "category",
+          "settings": { "title": "Order & Discretion" }
+        },
+        "q-packaging": {
+          "type": "question",
+          "settings": {
+            "question": "How discreet is your packaging?",
+            "answer": "<p>Every order ships in neutral, unbranded packaging with a neutral billing descriptor.</p>"
+          }
+        },
+        "cat-care": {
+          "type": "category",
+          "settings": { "title": "Product Care" }
+        },
+        "q-care": {
+          "type": "question",
+          "settings": {
+            "question": "How should I care for my piece?",
+            "answer": "<p>Care instructions accompany every garment. Follow them to let the fabric age the way it was designed to.</p>"
+          }
+        }
+      },
+      "block_order": [
+        "cat-brand",
+        "q-limited",
+        "q-authenticity",
+        "q-seasonal",
+        "cat-order",
+        "q-packaging",
+        "cat-care",
+        "q-care"
+      ],
+      "settings": {
+        "show_crest": true,
+        "crest_width": 137,
+        "crest_width_mobile": 77,
+        "title": "FAQs",
+        "background_color": "#000000",
+        "text_color": "#ffffff",
+        "accent_color": "#ed117c",
+        "heading_font": "montserrat_n7",
+        "body_font": "noto_sans_n4",
+        "content_max_width": 1120,
+        "padding_top": 128,
+        "padding_bottom": 96,
+        "padding_top_mobile": 96,
+        "padding_bottom_mobile": 64
+      }
+    }
+  },
+  "order": ["main"]
+}

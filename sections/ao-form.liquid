@@ -1,0 +1,348 @@
+{{ 'ao-base.css' | asset_url | stylesheet_tag }}
+{{ 'ao-pages.css' | asset_url | stylesheet_tag }}
+
+{%- comment -%}
+  One form section covers Artist Residencies, Mature Audience Membership and
+  the Candles Refill request — all three are the same thing in the design: a
+  masthead, a two-column field grid, a full-width action button and an
+  optional file-attach row.
+
+  Fields are blocks, so a merchant can add or reorder them without a new
+  section. Everything posts through Shopify's built-in `contact` form, which
+  emails the store's contact address.
+{%- endcomment -%}
+
+{%- liquid
+  assign t = section.settings
+
+  assign heading = t.title
+  if heading == blank and page.title != blank
+    assign heading = page.title
+  endif
+
+  assign form_id = 'ao-form-' | append: section.id
+-%}
+
+{% render 'ao-page-style', section: section %}
+
+<div id="ao-{{ section.id }}" class="ao-page ao-formsec">
+  <div class="ao-page__inner">
+    {% render 'ao-masthead',
+      show_crest: t.show_crest,
+      crest: t.crest,
+      crest_width: t.crest_width,
+      tagline: t.tagline,
+      title: heading,
+      body: t.body
+    %}
+
+    {%- if t.footnote != blank -%}
+      <p class="ao-formsec__footnote">{{ t.footnote }}</p>
+    {%- endif -%}
+
+    {%- form 'contact', id: form_id, class: 'ao-formsec__form' -%}
+      {%- if form.posted_successfully? -%}
+        <p class="ao-form__message ao-form__message--success">
+          {{ t.success_message | default: 'Thank you — we have your submission.' }}
+        </p>
+      {%- elsif form.errors -%}
+        <p class="ao-form__message ao-form__message--error">
+          {{ 'templates.contact.form.error_heading' | t }}
+          {{ form.errors | default_errors }}
+        </p>
+      {%- endif -%}
+
+      <div class="ao-form__grid">
+        {%- for block in section.blocks -%}
+          {%- liquid
+            assign b = block.settings
+            assign field_id = 'ao-field-' | append: section.id | append: '-' | append: block.id
+
+            # Shopify only routes `contact[email]` / `contact[body]` specially;
+            # everything else is passed through under its own label.
+            assign field_name = b.name
+            if field_name == blank
+              assign field_name = b.label | handle
+            endif
+            assign input_name = 'contact[' | append: field_name | append: ']'
+          -%}
+
+          {%- case block.type -%}
+
+            {%- when 'text' -%}
+              <div class="ao-field{% if b.full_width %} ao-field--full{% endif %}" {{ block.shopify_attributes }}>
+                <label class="ao-field__label" for="{{ field_id }}">{{ b.label }}</label>
+                {%- if b.hint != blank -%}
+                  <p class="ao-field__hint">{{ b.hint }}</p>
+                {%- endif -%}
+                <input
+                  id="{{ field_id }}"
+                  class="ao-field__input"
+                  type="{{ b.input_type | default: 'text' }}"
+                  name="{{ input_name }}"
+                  placeholder="{{ b.placeholder }}"
+                  {% if b.input_type == 'email' %}autocomplete="email"{% endif %}
+                  {% if b.input_type == 'tel' %}autocomplete="tel"{% endif %}
+                  {% if b.required %}required{% endif %}
+                >
+              </div>
+
+            {%- when 'textarea' -%}
+              <div class="ao-field ao-field--full" {{ block.shopify_attributes }}>
+                <label class="ao-field__label" for="{{ field_id }}">{{ b.label }}</label>
+                {%- if b.hint != blank -%}
+                  <p class="ao-field__hint">{{ b.hint }}</p>
+                {%- endif -%}
+                <textarea
+                  id="{{ field_id }}"
+                  class="ao-field__textarea"
+                  name="{{ input_name }}"
+                  rows="5"
+                  placeholder="{{ b.placeholder }}"
+                  {% if b.required %}required{% endif %}
+                ></textarea>
+              </div>
+
+            {%- when 'select' -%}
+              <div class="ao-field{% if b.full_width %} ao-field--full{% endif %}" {{ block.shopify_attributes }}>
+                <label class="ao-field__label" for="{{ field_id }}">{{ b.label }}</label>
+                {%- if b.hint != blank -%}
+                  <p class="ao-field__hint">{{ b.hint }}</p>
+                {%- endif -%}
+                <select
+                  id="{{ field_id }}"
+                  class="ao-field__select"
+                  name="{{ input_name }}"
+                  {% if b.required %}required{% endif %}
+                >
+                  {%- if b.placeholder != blank -%}
+                    <option value="">{{ b.placeholder }}</option>
+                  {%- endif -%}
+                  {%- assign options = b.options | newline_to_br | split: '<br />' -%}
+                  {%- for option in options -%}
+                    {%- assign option_label = option | strip -%}
+                    {%- if option_label != blank -%}
+                      <option value="{{ option_label | escape }}">{{ option_label }}</option>
+                    {%- endif -%}
+                  {%- endfor -%}
+                </select>
+              </div>
+
+            {%- when 'checkbox' -%}
+              <div class="ao-field ao-field--full ao-field--check" {{ block.shopify_attributes }}>
+                <label class="ao-formsec__check">
+                  <input
+                    type="checkbox"
+                    name="{{ input_name }}"
+                    value="{{ b.checked_value | default: 'Yes' }}"
+                    {% if b.required %}required{% endif %}
+                  >
+                  <span>{{ b.label }}</span>
+                </label>
+              </div>
+
+            {%- when 'heading' -%}
+              <div class="ao-field ao-field--full" {{ block.shopify_attributes }}>
+                <p class="ao-field__label">{{ b.label }}</p>
+                {%- if b.hint != blank -%}
+                  <p class="ao-field__hint">{{ b.hint }}</p>
+                {%- endif -%}
+              </div>
+
+          {%- endcase -%}
+        {%- endfor -%}
+      </div>
+
+      <div class="ao-form__actions">
+        <button type="submit" class="ao-btn ao-btn--full">
+          {{ t.submit_label | default: 'SUBMIT' }}
+        </button>
+
+        {%- if t.show_attach -%}
+          {%- comment -%}
+            Shopify's contact form cannot carry an upload, so this points the
+            visitor at an email address (or any URL) to send files instead.
+          {%- endcomment -%}
+          <a class="ao-btn ao-btn--ghost ao-btn--full" href="{{ t.attach_link | default: '#' }}">
+            <span class="ao-formsec__clip" aria-hidden="true"></span>
+            {{ t.attach_label | default: 'ATTACH FILE' }}
+          </a>
+          {%- if t.attach_note != blank -%}
+            <p class="ao-form__note">{{ t.attach_note }}</p>
+          {%- endif -%}
+        {%- endif -%}
+
+        {%- if t.secondary_label != blank -%}
+          <a class="ao-btn ao-btn--outline ao-btn--full" href="{{ t.secondary_link | default: '#' }}">
+            {{ t.secondary_label }}
+          </a>
+        {%- endif -%}
+      </div>
+    {%- endform -%}
+  </div>
+</div>
+
+{% stylesheet %}
+.ao-formsec__footnote {
+  margin: 24px 0 0;
+  font-size: 16px;
+  font-style: italic;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: center;
+}
+.ao-formsec__form {
+  margin: 48px 0 0;
+}
+.ao-field--check {
+  gap: 0;
+}
+.ao-formsec__check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+/* Paperclip-ish mark for the attach action, drawn without an icon file */
+.ao-formsec__clip {
+  width: 12px;
+  height: 18px;
+  border: 2px solid currentColor;
+  border-radius: 8px 8px 6px 6px;
+  border-bottom-width: 2px;
+}
+
+@media screen and (min-width: 750px) {
+  .ao-field--full { grid-column: 1 / -1; }
+  .ao-formsec__footnote { font-size: 20px; }
+}
+
+@media screen and (min-width: 990px) {
+  .ao-formsec__form { margin-top: 64px; }
+  .ao-form__actions {
+    max-width: 1040px;
+    margin-inline: auto;
+  }
+}
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "AO Form",
+  "tag": "section",
+  "class": "ao-form-section",
+  "settings": [
+    { "type": "header", "content": "Masthead" },
+    { "type": "checkbox", "id": "show_crest", "label": "Show crest", "default": false },
+    { "type": "image_picker", "id": "crest", "label": "Crest image", "info": "Leave blank to use the bundled AO lockup." },
+    { "type": "range", "id": "crest_width", "min": 60, "max": 200, "step": 1, "unit": "px", "label": "Crest width (desktop)", "default": 137 },
+    { "type": "range", "id": "crest_width_mobile", "min": 40, "max": 140, "step": 1, "unit": "px", "label": "Crest width (mobile)", "default": 77 },
+    { "type": "text", "id": "tagline", "label": "Tagline" },
+    { "type": "text", "id": "title", "label": "Title", "info": "Leave blank to use the page title." },
+    { "type": "richtext", "id": "body", "label": "Intro copy" },
+    { "type": "text", "id": "footnote", "label": "Italic footnote", "info": "Shown under the intro, e.g. annual access pricing." },
+
+    { "type": "header", "content": "Actions" },
+    { "type": "text", "id": "submit_label", "label": "Submit label", "default": "SUBMIT" },
+    { "type": "text", "id": "success_message", "label": "Success message", "default": "Thank you — we have your submission." },
+    { "type": "checkbox", "id": "show_attach", "label": "Show \"attach file\" action", "default": false },
+    { "type": "text", "id": "attach_label", "label": "\"Attach file\" label", "default": "ATTACH FILE" },
+    { "type": "url", "id": "attach_link", "label": "\"Attach file\" link", "info": "Shopify's contact form cannot carry uploads — point this at a mailto: address or an upload service." },
+    { "type": "text", "id": "attach_note", "label": "\"Attach file\" note" },
+    { "type": "text", "id": "secondary_label", "label": "Secondary button label" },
+    { "type": "url", "id": "secondary_link", "label": "Secondary button link" },
+
+    { "type": "header", "content": "Colors" },
+    { "type": "color", "id": "background_color", "label": "Background", "default": "#000000" },
+    { "type": "color", "id": "text_color", "label": "Text", "default": "#ffffff" },
+    { "type": "color", "id": "accent_color", "label": "Accent", "default": "#ed117c" },
+
+    { "type": "header", "content": "Typography" },
+    { "type": "font_picker", "id": "heading_font", "label": "Heading font", "default": "montserrat_n7" },
+    { "type": "font_picker", "id": "body_font", "label": "Body font", "default": "noto_sans_n4" },
+
+    { "type": "header", "content": "Layout" },
+    { "type": "range", "id": "content_max_width", "min": 600, "max": 1440, "step": 20, "unit": "px", "label": "Content max width", "default": 1200 },
+    { "type": "range", "id": "padding_top", "min": 0, "max": 200, "step": 4, "unit": "px", "label": "Padding top (desktop)", "default": 96 },
+    { "type": "range", "id": "padding_bottom", "min": 0, "max": 200, "step": 4, "unit": "px", "label": "Padding bottom (desktop)", "default": 96 },
+    { "type": "range", "id": "padding_top_mobile", "min": 0, "max": 160, "step": 4, "unit": "px", "label": "Padding top (mobile)", "default": 64 },
+    { "type": "range", "id": "padding_bottom_mobile", "min": 0, "max": 160, "step": 4, "unit": "px", "label": "Padding bottom (mobile)", "default": 64 }
+  ],
+  "blocks": [
+    {
+      "type": "text",
+      "name": "Text field",
+      "settings": [
+        { "type": "text", "id": "label", "label": "Label", "default": "NAME" },
+        { "type": "text", "id": "name", "label": "Field name", "info": "Used in the notification email. Leave blank to derive it from the label. Use \"email\" for the sender's address." },
+        { "type": "select", "id": "input_type", "label": "Type", "default": "text",
+          "options": [
+            { "value": "text", "label": "Text" },
+            { "value": "email", "label": "Email" },
+            { "value": "tel", "label": "Phone" },
+            { "value": "url", "label": "URL" }
+          ]
+        },
+        { "type": "text", "id": "placeholder", "label": "Placeholder", "default": "Text..." },
+        { "type": "text", "id": "hint", "label": "Hint" },
+        { "type": "checkbox", "id": "required", "label": "Required", "default": false },
+        { "type": "checkbox", "id": "full_width", "label": "Full width", "default": false }
+      ]
+    },
+    {
+      "type": "textarea",
+      "name": "Text area",
+      "settings": [
+        { "type": "text", "id": "label", "label": "Label", "default": "THE PROPOSAL" },
+        { "type": "text", "id": "name", "label": "Field name", "info": "Use \"body\" to make this the message body of the email." },
+        { "type": "text", "id": "placeholder", "label": "Placeholder", "default": "Text Area..." },
+        { "type": "text", "id": "hint", "label": "Hint" },
+        { "type": "checkbox", "id": "required", "label": "Required", "default": false }
+      ]
+    },
+    {
+      "type": "select",
+      "name": "Dropdown",
+      "settings": [
+        { "type": "text", "id": "label", "label": "Label", "default": "DROPDOWN" },
+        { "type": "text", "id": "name", "label": "Field name" },
+        { "type": "text", "id": "placeholder", "label": "Placeholder option", "default": "Dropdown" },
+        { "type": "textarea", "id": "options", "label": "Options", "info": "One per line.", "default": "Option one\nOption two" },
+        { "type": "text", "id": "hint", "label": "Hint" },
+        { "type": "checkbox", "id": "required", "label": "Required", "default": false },
+        { "type": "checkbox", "id": "full_width", "label": "Full width", "default": false }
+      ]
+    },
+    {
+      "type": "checkbox",
+      "name": "Checkbox",
+      "settings": [
+        { "type": "text", "id": "label", "label": "Label", "default": "I agree to the terms" },
+        { "type": "text", "id": "name", "label": "Field name" },
+        { "type": "text", "id": "checked_value", "label": "Value when checked", "default": "Yes" },
+        { "type": "checkbox", "id": "required", "label": "Required", "default": false }
+      ]
+    },
+    {
+      "type": "heading",
+      "name": "Group heading",
+      "settings": [
+        { "type": "text", "id": "label", "label": "Heading", "default": "THE PROPOSAL" },
+        { "type": "text", "id": "hint", "label": "Sub-copy" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "AO Form",
+      "blocks": [
+        { "type": "text" },
+        { "type": "text" },
+        { "type": "textarea" }
+      ]
+    }
+  ]
+}
+{% endschema %}

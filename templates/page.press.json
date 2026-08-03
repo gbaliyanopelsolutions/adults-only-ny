@@ -1,0 +1,49 @@
+{
+  "sections": {
+    "main": {
+      "type": "ao-info-page",
+      "settings": {
+        "show_logo": true,
+        "logo_width": 137,
+        "logo_width_mobile": 77,
+        "tagline": "THE SOURCE FOR UNCOMPROMISED EXPRESSION",
+        "show_title": true,
+        "title_override": "PRESS",
+        "body_override": "<p>For all media and editorial inquiries. Adults Only welcomes contact from journalists, editors, and accredited media seeking to cover the intersection of luxury, rebellion, and sensual fashion.</p><p>We provide exclusive access to high-resolution assets, our full brand manifesto, and interviews with our creative team. We operate outside of convention; therefore, we seek partners who understand the power of our unapologetically bold visual language. All requests for access must be submitted below.</p>",
+        "text_alignment": "center",
+        "content_max_width": 1120,
+        "background_color": "#000000",
+        "text_color": "#ffffff",
+        "accent_color": "#ed117c",
+        "heading_font": "montserrat_n7",
+        "body_font": "noto_sans_n4",
+        "tagline_size": 30,
+        "tagline_size_mobile": 20,
+        "title_size": 36,
+        "title_size_mobile": 24,
+        "body_size": 22,
+        "body_size_mobile": 16,
+        "padding_top": 128,
+        "padding_bottom": 80,
+        "padding_horizontal": 160,
+        "padding_top_mobile": 112,
+        "padding_bottom_mobile": 48,
+        "padding_horizontal_mobile": 24
+      }
+    },
+    "banner": {
+      "type": "ao-media-banner",
+      "settings": {
+        "autoplay": true,
+        "loop": true,
+        "show_controls": false,
+        "width": "full",
+        "content_max_width": 1440,
+        "height": 1080,
+        "height_mobile": 480,
+        "background_color": "#000000"
+      }
+    }
+  },
+  "order": ["main", "banner"]
+}

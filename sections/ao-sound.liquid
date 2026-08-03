@@ -1,0 +1,319 @@
+{{ 'ao-base.css' | asset_url | stylesheet_tag }}
+{{ 'ao-pages.css' | asset_url | stylesheet_tag }}
+
+{%- comment -%}
+  Museum of Sound — a two-up grid of track cards: square artwork with a play
+  control on the left, title and collection on the right.
+
+  A card either plays an audio file inline or links out to a streaming
+  service, depending on what the merchant fills in.
+{%- endcomment -%}
+
+{%- liquid
+  assign t = section.settings
+
+  assign heading = t.title
+  if heading == blank and page.title != blank
+    assign heading = page.title
+  endif
+-%}
+
+{% render 'ao-page-style', section: section %}
+
+<div id="ao-{{ section.id }}" class="ao-page ao-sound">
+  <div class="ao-page__inner">
+    {% render 'ao-masthead',
+      show_crest: t.show_crest,
+      crest: t.crest,
+      crest_width: t.crest_width,
+      tagline: t.tagline,
+      title: heading,
+      body: t.body
+    %}
+
+    {%- if section.blocks.size > 0 -%}
+      <ul class="ao-sound__grid" role="list">
+        {%- for block in section.blocks -%}
+          {%- liquid
+            assign b = block.settings
+            assign audio_id = 'ao-audio-' | append: section.id | append: '-' | append: block.id
+          -%}
+          <li class="ao-sound__card" {{ block.shopify_attributes }}>
+            <div class="ao-sound__art">
+              {%- if b.image != blank -%}
+                {{
+                  b.image
+                  | image_url: width: 400
+                  | image_tag:
+                    class: 'ao-sound__art-img',
+                    widths: '152, 304, 400',
+                    sizes: '152px',
+                    loading: 'lazy',
+                    alt: b.title | default: shop.name | escape
+                }}
+              {%- endif -%}
+
+              {%- if b.audio_url != blank -%}
+                <button
+                  type="button"
+                  class="ao-sound__play"
+                  data-ao-sound-play
+                  aria-controls="{{ audio_id }}"
+                  aria-label="{{ b.title | default: 'Play' | escape }}"
+                >
+                  <span class="ao-sound__play-icon" aria-hidden="true"></span>
+                </button>
+              {%- endif -%}
+            </div>
+
+            <div class="ao-sound__info">
+              <div class="ao-sound__meta">
+                {%- if b.title != blank -%}
+                  <p class="ao-sound__title">{{ b.title }}</p>
+                {%- endif -%}
+                {%- if b.subtitle != blank -%}
+                  <p class="ao-sound__subtitle">{{ b.subtitle }}</p>
+                {%- endif -%}
+              </div>
+
+              {%- if b.link != blank -%}
+                <a class="ao-sound__link" href="{{ b.link }}" {% if b.link_new_tab %}target="_blank" rel="noopener"{% endif %}>
+                  <span class="visually-hidden">{{ b.link_label | default: 'Listen' }}</span>
+                  <span class="ao-sound__chevron" aria-hidden="true"></span>
+                </a>
+              {%- endif -%}
+            </div>
+
+            {%- if b.audio_url != blank -%}
+              <audio id="{{ audio_id }}" class="ao-sound__audio" preload="none" controls>
+                <source src="{{ b.audio_url }}">
+              </audio>
+            {%- endif -%}
+          </li>
+        {%- endfor -%}
+      </ul>
+    {%- else -%}
+      <p class="ao-empty">{{ t.empty_text | default: 'The frequencies are being curated.' }}</p>
+    {%- endif -%}
+  </div>
+</div>
+
+<script>
+  // Play buttons drive the (visually hidden) native <audio> element and make
+  // sure only one track plays at a time.
+  (function () {
+    var root = document.getElementById('ao-{{ section.id }}');
+    if (!root) return;
+
+    var buttons = Array.prototype.slice.call(root.querySelectorAll('[data-ao-sound-play]'));
+
+    buttons.forEach(function (button) {
+      var audio = document.getElementById(button.getAttribute('aria-controls'));
+      if (!audio) return;
+
+      button.addEventListener('click', function () {
+        if (audio.paused) {
+          root.querySelectorAll('audio').forEach(function (other) {
+            if (other !== audio) other.pause();
+          });
+          audio.play();
+        } else {
+          audio.pause();
+        }
+      });
+
+      audio.addEventListener('play', function () {
+        button.classList.add('is-playing');
+      });
+      audio.addEventListener('pause', function () {
+        button.classList.remove('is-playing');
+      });
+      audio.addEventListener('ended', function () {
+        button.classList.remove('is-playing');
+      });
+    });
+  })();
+</script>
+
+{% stylesheet %}
+.ao-sound__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+  margin: 40px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.ao-sound__card {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  align-items: center;
+  gap: 16px;
+  padding-right: 16px;
+  border-radius: 12px;
+  background: var(--ao-surface-2);
+  overflow: hidden;
+}
+.ao-sound__art {
+  position: relative;
+  align-self: stretch;
+  min-height: 120px;
+  background: var(--ao-surface);
+}
+.ao-sound__art-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ao-sound__play {
+  position: absolute;
+  inset-inline-start: 8px;
+  inset-block-start: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  cursor: pointer;
+}
+.ao-sound__play-icon {
+  width: 0;
+  height: 0;
+  margin-inline-start: 3px;
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+  border-left: 10px solid var(--ao-off-white, #fafafa);
+}
+/* Play triangle becomes a pause bar pair while the track runs */
+.ao-sound__play.is-playing .ao-sound__play-icon {
+  width: 10px;
+  height: 12px;
+  margin-inline-start: 0;
+  border: 0;
+  border-left: 3px solid var(--ao-off-white, #fafafa);
+  border-right: 3px solid var(--ao-off-white, #fafafa);
+}
+.ao-sound__info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 0;
+}
+.ao-sound__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ao-sound__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.ao-sound__subtitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+  opacity: 0.85;
+}
+.ao-sound__link {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  color: inherit;
+}
+.ao-sound__link:hover { color: var(--ao-page-accent); }
+.ao-sound__chevron {
+  width: 10px;
+  height: 10px;
+  border-top: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+  transform: rotate(45deg);
+}
+.ao-sound__audio {
+  grid-column: 1 / -1;
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+@media screen and (min-width: 750px) {
+  .ao-sound__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 32px;
+  }
+  .ao-sound__card { grid-template-columns: 152px 1fr; }
+  .ao-sound__art { min-height: 152px; }
+  .ao-sound__title { font-size: 20px; }
+  .ao-sound__subtitle { font-size: 16px; }
+}
+
+@media screen and (min-width: 990px) {
+  .ao-sound__grid { margin-top: 56px; }
+}
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "AO Museum of Sound",
+  "tag": "section",
+  "class": "ao-sound-section",
+  "settings": [
+    { "type": "header", "content": "Masthead" },
+    { "type": "checkbox", "id": "show_crest", "label": "Show crest", "default": true },
+    { "type": "image_picker", "id": "crest", "label": "Crest image", "info": "Leave blank to use the bundled AO lockup." },
+    { "type": "range", "id": "crest_width", "min": 60, "max": 200, "step": 1, "unit": "px", "label": "Crest width (desktop)", "default": 137 },
+    { "type": "range", "id": "crest_width_mobile", "min": 40, "max": 140, "step": 1, "unit": "px", "label": "Crest width (mobile)", "default": 77 },
+    { "type": "text", "id": "tagline", "label": "Tagline", "default": "CURATED FREQUENCIES" },
+    { "type": "text", "id": "title", "label": "Title", "info": "Leave blank to use the page title." },
+    { "type": "richtext", "id": "body", "label": "Intro copy" },
+    { "type": "text", "id": "empty_text", "label": "Empty message", "default": "The frequencies are being curated." },
+
+    { "type": "header", "content": "Colors" },
+    { "type": "color", "id": "background_color", "label": "Background", "default": "#000000" },
+    { "type": "color", "id": "text_color", "label": "Text", "default": "#ffffff" },
+    { "type": "color", "id": "accent_color", "label": "Accent", "default": "#ed117c" },
+
+    { "type": "header", "content": "Typography" },
+    { "type": "font_picker", "id": "heading_font", "label": "Heading font", "default": "montserrat_n7" },
+    { "type": "font_picker", "id": "body_font", "label": "Body font", "default": "noto_sans_n4" },
+
+    { "type": "header", "content": "Layout" },
+    { "type": "range", "id": "content_max_width", "min": 600, "max": 1440, "step": 20, "unit": "px", "label": "Content max width", "default": 1120 },
+    { "type": "range", "id": "padding_top", "min": 0, "max": 200, "step": 4, "unit": "px", "label": "Padding top (desktop)", "default": 128 },
+    { "type": "range", "id": "padding_bottom", "min": 0, "max": 200, "step": 4, "unit": "px", "label": "Padding bottom (desktop)", "default": 96 },
+    { "type": "range", "id": "padding_top_mobile", "min": 0, "max": 160, "step": 4, "unit": "px", "label": "Padding top (mobile)", "default": 96 },
+    { "type": "range", "id": "padding_bottom_mobile", "min": 0, "max": 160, "step": 4, "unit": "px", "label": "Padding bottom (mobile)", "default": 64 }
+  ],
+  "blocks": [
+    {
+      "type": "track",
+      "name": "Track",
+      "settings": [
+        { "type": "image_picker", "id": "image", "label": "Artwork" },
+        { "type": "text", "id": "title", "label": "Title", "default": "Product Name" },
+        { "type": "text", "id": "subtitle", "label": "Subtitle", "default": "Collection" },
+        { "type": "url", "id": "audio_url", "label": "Audio file", "info": "Upload an MP3 under Content → Files and paste its URL here to play inline." },
+        { "type": "url", "id": "link", "label": "External link", "info": "Streaming service, product page, etc." },
+        { "type": "text", "id": "link_label", "label": "Link label", "default": "Listen" },
+        { "type": "checkbox", "id": "link_new_tab", "label": "Open link in a new tab", "default": true }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "AO Museum of Sound",
+      "blocks": [{ "type": "track" }, { "type": "track" }, { "type": "track" }, { "type": "track" }]
+    }
+  ]
+}
+{% endschema %}

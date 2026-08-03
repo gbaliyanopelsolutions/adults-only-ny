@@ -1,0 +1,58 @@
+{%- comment -%}
+  Emits the per-section CSS custom properties and @font-face rules that every
+  AO page section shares. Keeping it here means a colour or spacing setting is
+  wired up once instead of once per section.
+
+  Expects the section to define these settings (all optional — sensible
+  fallbacks are used when a setting is absent):
+    background_color, text_color, accent_color,
+    heading_font, body_font,
+    content_max_width, crest_width, crest_width_mobile,
+    padding_top, padding_bottom, padding_top_mobile, padding_bottom_mobile
+
+  Usage: {% render 'ao-page-style', section: section %}
+{%- endcomment -%}
+
+{%- liquid
+  assign t = section.settings
+-%}
+{%- style -%}
+  #ao-{{ section.id }} {
+    --ao-page-bg: {{ t.background_color | default: '#000000' }};
+    --ao-page-fg: {{ t.text_color | default: '#ffffff' }};
+    --ao-page-accent: {{ t.accent_color | default: '#ed117c' }};
+    {%- if t.content_max_width %}
+    --ao-page-max-w: {{ t.content_max_width }}px;
+    {%- endif %}
+    {%- if t.crest_width %}
+    --ao-crest-w-d: {{ t.crest_width }}px;
+    {%- endif %}
+    {%- if t.crest_width_mobile %}
+    --ao-crest-w-m: {{ t.crest_width_mobile }}px;
+    {%- endif %}
+    {%- if t.padding_top %}
+    --ao-pad-t-d: {{ t.padding_top }}px;
+    {%- endif %}
+    {%- if t.padding_bottom %}
+    --ao-pad-b-d: {{ t.padding_bottom }}px;
+    {%- endif %}
+    {%- if t.padding_top_mobile %}
+    --ao-pad-t-m: {{ t.padding_top_mobile }}px;
+    {%- endif %}
+    {%- if t.padding_bottom_mobile %}
+    --ao-pad-b-m: {{ t.padding_bottom_mobile }}px;
+    {%- endif %}
+    {%- if t.heading_font != blank %}
+    --ao-h: {{ t.heading_font.family }}, {{ t.heading_font.fallback_families }};
+    {%- endif %}
+    {%- if t.body_font != blank %}
+    --ao-b: {{ t.body_font.family }}, {{ t.body_font.fallback_families }};
+    {%- endif %}
+  }
+  {%- if t.heading_font != blank -%}
+    {{ t.heading_font | font_face: font_display: 'swap' }}
+  {%- endif -%}
+  {%- if t.body_font != blank -%}
+    {{ t.body_font | font_face: font_display: 'swap' }}
+  {%- endif -%}
+{%- endstyle -%}

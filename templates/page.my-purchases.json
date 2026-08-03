@@ -1,19 +1,17 @@
 {
   "sections": {
     "main": {
-      "type": "ao-collection",
+      "type": "ao-orders",
       "settings": {
         "show_crest": true,
         "crest_width": 137,
         "crest_width_mobile": 77,
-        "show_collection_description": false,
-        "products_per_page": 24,
-        "card_subtitle": "type",
-        "empty_text": "Nothing on display here yet.",
-        "show_toolbar": true,
-        "show_product_count": true,
-        "show_sort": true,
-        "show_filters": true,
+        "title": "MY PURCHASES",
+        "orders_per_page": 10,
+        "line_items_to_show": 10,
+        "view_order_label": "View Order",
+        "empty_text": "You have not acquired anything yet.",
+        "logged_out_text": "Sign in to view your acquisitions.",
         "background_color": "#000000",
         "text_color": "#ffffff",
         "accent_color": "#ed117c",

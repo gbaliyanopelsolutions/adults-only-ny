@@ -1,0 +1,66 @@
+{%- comment -%}
+  AO product card — square image, uppercase title, subtitle, price.
+
+  Accepts:
+  - product: a product object (required)
+  - subtitle_source: 'type' (default), 'vendor' or 'none'
+  - eager: boolean, load the image eagerly (use for the first row)
+  - sizes: an optional sizes attribute override
+
+  Usage: {% render 'ao-product-card', product: product, eager: forloop.first %}
+{%- endcomment -%}
+
+{%- liquid
+  assign card_subtitle = ''
+  assign source = subtitle_source | default: 'type'
+  case source
+    when 'type'
+      assign card_subtitle = product.type
+    when 'vendor'
+      assign card_subtitle = product.vendor
+  endcase
+
+  assign img_sizes = sizes | default: '(min-width: 990px) 357px, (min-width: 750px) 30vw, 45vw'
+  assign img_loading = 'lazy'
+  if eager
+    assign img_loading = 'eager'
+  endif
+-%}
+
+<a class="ao-pcard" href="{{ product.url }}">
+  <span class="ao-pcard__media">
+    {%- if product.featured_media != blank -%}
+      {{
+        product.featured_media
+        | image_url: width: 800
+        | image_tag:
+          class: 'ao-pcard__img',
+          widths: '200, 300, 400, 600, 800',
+          sizes: img_sizes,
+          loading: img_loading,
+          alt: product.featured_media.alt | default: product.title | escape
+      }}
+    {%- else -%}
+      {{ 'product-apparel-1' | placeholder_svg_tag: 'ao-pcard__img' }}
+    {%- endif -%}
+
+    {%- if product.available == false -%}
+      <span class="ao-pcard__badge">{{ 'products.product.sold_out' | t }}</span>
+    {%- elsif product.compare_at_price > product.price -%}
+      <span class="ao-pcard__badge">{{ 'products.product.on_sale' | t }}</span>
+    {%- endif -%}
+  </span>
+
+  <span class="ao-pcard__info">
+    <span class="ao-pcard__title">{{ product.title }}</span>
+    {%- if card_subtitle != blank -%}
+      <span class="ao-pcard__meta">{{ card_subtitle }}</span>
+    {%- endif -%}
+    <span class="ao-pcard__price">
+      {%- if product.compare_at_price > product.price -%}
+        <s>{{ product.compare_at_price | money_with_currency }}</s>
+      {%- endif -%}
+      {{ product.price | money_with_currency }}
+    </span>
+  </span>
+</a>
