@@ -1,0 +1,76 @@
+{
+  "sections": {
+    "banner": {
+      "type": "ao-media-banner",
+      "settings": {
+        "autoplay": true,
+        "loop": true,
+        "show_controls": false,
+        "width": "full",
+        "content_max_width": 1440,
+        "height": 560,
+        "height_mobile": 320,
+        "background_color": "#000000"
+      }
+    },
+    "main": {
+      "type": "ao-form",
+      "blocks": {
+        "name": {
+          "type": "text",
+          "settings": {
+            "label": "NAME",
+            "name": "name",
+            "input_type": "text",
+            "placeholder": "Text...",
+            "required": true,
+            "full_width": true
+          }
+        },
+        "email": {
+          "type": "text",
+          "settings": {
+            "label": "EMAIL",
+            "name": "email",
+            "input_type": "email",
+            "placeholder": "Text...",
+            "required": true,
+            "full_width": false
+          }
+        },
+        "phone": {
+          "type": "text",
+          "settings": {
+            "label": "PHONE",
+            "name": "phone",
+            "input_type": "tel",
+            "placeholder": "Text...",
+            "full_width": false
+          }
+        }
+      },
+      "block_order": ["name", "email", "phone"],
+      "settings": {
+        "show_crest": false,
+        "title": "MATURE AUDIENCE MEMBERSHIP",
+        "body": "<p>Join the Mature Audience for private access to one of one pieces and limited products, curated and released exclusively for members. Reserved for those with access.</p>",
+        "footnote": "† Annual Access: $100. Secure your status to unlock limited edition styles. Commitment reveals the garment.",
+        "submit_label": "REQUEST ACCESS",
+        "success_message": "Thank you — your request is with the concierge.",
+        "show_attach": false,
+        "secondary_label": "ALREADY A MEMBER? SIGN IN",
+        "background_color": "#000000",
+        "text_color": "#ffffff",
+        "accent_color": "#ed117c",
+        "heading_font": "montserrat_n7",
+        "body_font": "noto_sans_n4",
+        "content_max_width": 1200,
+        "padding_top": 80,
+        "padding_bottom": 96,
+        "padding_top_mobile": 56,
+        "padding_bottom_mobile": 64
+      }
+    }
+  },
+  "order": ["banner", "main"]
+}

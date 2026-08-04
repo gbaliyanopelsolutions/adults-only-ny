@@ -1,0 +1,145 @@
+{{ 'ao-base.css' | asset_url | stylesheet_tag }}
+{{ 'ao-pages.css' | asset_url | stylesheet_tag }}
+
+{%- comment -%}
+  Full-bleed image or video band. Used under the Press copy and above the
+  Membership headline, and available anywhere else a page needs a break.
+{%- endcomment -%}
+
+{%- liquid
+  assign t = section.settings
+-%}
+
+{%- style -%}
+  #ao-{{ section.id }} {
+    --ao-banner-bg: {{ t.background_color | default: '#000000' }};
+    --ao-banner-h-m: {{ t.height_mobile }}px;
+    --ao-banner-h-d: {{ t.height }}px;
+    --ao-banner-max-w: {{ t.content_max_width | default: 1440 }}px;
+  }
+{%- endstyle -%}
+
+<div id="ao-{{ section.id }}" class="ao-banner ao-banner--{{ t.width }}">
+  {%- if t.video != blank -%}
+    {{
+      t.video
+      | video_tag:
+        class: 'ao-banner__media',
+        image_size: '1600x',
+        autoplay: t.autoplay,
+        loop: t.loop,
+        muted: true,
+        controls: t.show_controls,
+        playsinline: true
+    }}
+  {%- elsif t.video_url != blank -%}
+    <div class="ao-banner__embed">
+      {%- if t.video_url.type == 'youtube' -%}
+        <iframe
+          src="https://www.youtube.com/embed/{{ t.video_url.id }}?playsinline=1&modestbranding=1&rel=0"
+          title="{{ t.alt_text | default: shop.name | escape }}"
+          allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen
+          loading="lazy"
+        ></iframe>
+      {%- else -%}
+        <iframe
+          src="https://player.vimeo.com/video/{{ t.video_url.id }}"
+          title="{{ t.alt_text | default: shop.name | escape }}"
+          allow="autoplay; fullscreen; picture-in-picture"
+          allowfullscreen
+          loading="lazy"
+        ></iframe>
+      {%- endif -%}
+    </div>
+  {%- elsif t.image != blank -%}
+    {{
+      t.image
+      | image_url: width: 2400
+      | image_tag:
+        class: 'ao-banner__media',
+        widths: '600, 900, 1200, 1600, 2000, 2400',
+        sizes: '100vw',
+        loading: 'lazy',
+        alt: t.alt_text | default: shop.name | escape
+    }}
+  {%- else -%}
+    <div class="ao-banner__placeholder">
+      {{ 'lifestyle-1' | placeholder_svg_tag: 'ao-banner__media' }}
+    </div>
+  {%- endif -%}
+</div>
+
+{% stylesheet %}
+.ao-banner {
+  position: relative;
+  overflow: hidden;
+  background: var(--ao-banner-bg, #000);
+  height: var(--ao-banner-h-m, 320px);
+}
+.ao-banner--contained {
+  max-width: var(--ao-banner-max-w, 1440px);
+  margin-inline: auto;
+}
+.ao-banner__media,
+.ao-banner__placeholder {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ao-banner__placeholder svg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ao-banner__embed {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.ao-banner__embed iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+@media screen and (min-width: 990px) {
+  .ao-banner { height: var(--ao-banner-h-d, 560px); }
+}
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "AO Media Banner",
+  "tag": "section",
+  "class": "ao-banner-section",
+  "settings": [
+    { "type": "header", "content": "Media" },
+    { "type": "image_picker", "id": "image", "label": "Image" },
+    { "type": "video", "id": "video", "label": "Video", "info": "Takes priority over the image." },
+    { "type": "video_url", "id": "video_url", "label": "External video", "accept": ["youtube", "vimeo"], "info": "Used when no uploaded video is set." },
+    { "type": "text", "id": "alt_text", "label": "Alt text" },
+    { "type": "checkbox", "id": "autoplay", "label": "Autoplay (muted)", "default": true },
+    { "type": "checkbox", "id": "loop", "label": "Loop", "default": true },
+    { "type": "checkbox", "id": "show_controls", "label": "Show controls", "default": false },
+
+    { "type": "header", "content": "Layout" },
+    { "type": "select", "id": "width", "label": "Width", "default": "full",
+      "options": [
+        { "value": "full", "label": "Full bleed" },
+        { "value": "contained", "label": "Contained" }
+      ]
+    },
+    { "type": "range", "id": "content_max_width", "min": 600, "max": 1600, "step": 20, "unit": "px", "label": "Contained max width", "default": 1440 },
+    { "type": "range", "id": "height", "min": 200, "max": 1080, "step": 20, "unit": "px", "label": "Height (desktop)", "default": 560 },
+    { "type": "range", "id": "height_mobile", "min": 160, "max": 720, "step": 20, "unit": "px", "label": "Height (mobile)", "default": 320 },
+    { "type": "color", "id": "background_color", "label": "Background", "default": "#000000" }
+  ],
+  "presets": [
+    { "name": "AO Media Banner" }
+  ]
+}
+{% endschema %}

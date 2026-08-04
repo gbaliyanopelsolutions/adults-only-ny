@@ -1,0 +1,112 @@
+{
+  "sections": {
+    "main": {
+      "type": "ao-info-page",
+      "settings": {
+        "show_logo": true,
+        "logo_width": 137,
+        "logo_width_mobile": 77,
+        "tagline": "WHEN MINDS ALIGN, RARITY EMERGES",
+        "show_title": true,
+        "title_override": "ARTIST RESIDENCIES",
+        "body_override": "<p>Adults Only seeks partnerships that echo our commitment to uncompromised expression. We invite artists, retailers, and creative innovators who understand the language of scarce luxury and the power of confident rebellion. If your vision aligns with high-end craftsmanship, sensual storytelling, and a fearless approach to aesthetic disruption, we want to hear from you.</p><p>Collaborate with us to define the next phase of the gallery wear movement.</p>",
+        "text_alignment": "center",
+        "content_max_width": 1120,
+        "background_color": "#000000",
+        "text_color": "#ffffff",
+        "accent_color": "#ed117c",
+        "heading_font": "montserrat_n7",
+        "body_font": "noto_sans_n4",
+        "tagline_size": 30,
+        "tagline_size_mobile": 20,
+        "title_size": 36,
+        "title_size_mobile": 24,
+        "body_size": 22,
+        "body_size_mobile": 16,
+        "padding_top": 128,
+        "padding_bottom": 0,
+        "padding_horizontal": 160,
+        "padding_top_mobile": 112,
+        "padding_bottom_mobile": 0,
+        "padding_horizontal_mobile": 24
+      }
+    },
+    "form": {
+      "type": "ao-form",
+      "blocks": {
+        "name": {
+          "type": "text",
+          "settings": {
+            "label": "NAME",
+            "name": "name",
+            "input_type": "text",
+            "placeholder": "Text...",
+            "required": true,
+            "full_width": false
+          }
+        },
+        "email": {
+          "type": "text",
+          "settings": {
+            "label": "EMAIL",
+            "name": "email",
+            "input_type": "email",
+            "placeholder": "Text...",
+            "required": true,
+            "full_width": false
+          }
+        },
+        "practice": {
+          "type": "text",
+          "settings": {
+            "label": "PRACTICE",
+            "name": "practice",
+            "input_type": "text",
+            "placeholder": "Text...",
+            "full_width": false
+          }
+        },
+        "discipline": {
+          "type": "select",
+          "settings": {
+            "label": "DISCIPLINE",
+            "name": "discipline",
+            "placeholder": "Dropdown",
+            "options": "Visual art\nPhotography\nSound\nFashion\nOther",
+            "full_width": false
+          }
+        },
+        "proposal": {
+          "type": "textarea",
+          "settings": {
+            "label": "THE PROPOSAL",
+            "name": "body",
+            "placeholder": "Text Area...",
+            "hint": "Briefly outline your artistic vision and how it aligns with Adults Only's commitment to uncompromised expression",
+            "required": true
+          }
+        }
+      },
+      "block_order": ["name", "email", "practice", "discipline", "proposal"],
+      "settings": {
+        "show_crest": false,
+        "submit_label": "SUBMIT",
+        "success_message": "Thank you — we have your proposal.",
+        "show_attach": true,
+        "attach_label": "ATTACH FILE",
+        "attach_note": "Send supporting work to our residencies address after submitting.",
+        "background_color": "#000000",
+        "text_color": "#ffffff",
+        "accent_color": "#ed117c",
+        "heading_font": "montserrat_n7",
+        "body_font": "noto_sans_n4",
+        "content_max_width": 1120,
+        "padding_top": 64,
+        "padding_bottom": 96,
+        "padding_top_mobile": 48,
+        "padding_bottom_mobile": 64
+      }
+    }
+  },
+  "order": ["main", "form"]
+}

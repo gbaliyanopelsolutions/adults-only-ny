@@ -1,0 +1,639 @@
+{{ 'ao-base.css' | asset_url | stylesheet_tag }}
+{{ 'ao-pages.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'ao-product.js' | asset_url }}" defer="defer"></script>
+
+{%- liquid
+  assign t = section.settings
+  assign current = product.selected_or_first_available_variant
+
+  # "Return to exhibit" points at the collection the shopper came from when
+  # there is one, otherwise at the configured fallback link.
+  assign back_url = t.back_link
+  assign back_label = t.back_label
+  if collection.url != blank
+    assign back_url = collection.url
+    if t.back_label_use_collection
+      assign back_label = 'RETURN TO ' | append: collection.title | upcase
+    endif
+  endif
+
+  # Optional editorial banner shown above the variant pickers.
+  assign banner_ns = t.banner_metafield_namespace | default: 'custom'
+  assign banner_key = t.banner_metafield_key | default: 'pdp_banner'
+  assign banner = product.metafields[banner_ns][banner_key]
+
+  assign gallery_media = product.media | where: 'media_type', 'image'
+
+  assign product_form_id = 'ao-product-form-' | append: section.id
+  assign notify_form_id = 'ao-notify-form-' | append: section.id
+-%}
+
+{% render 'ao-page-style', section: section %}
+
+<div
+  id="ao-{{ section.id }}"
+  class="ao-page ao-pdp"
+  data-ao-product
+  data-string-add-to-cart="{{ 'products.product.add_to_cart' | t | escape }}"
+  data-string-sold-out="{{ 'products.product.sold_out' | t | escape }}"
+  data-string-unavailable="{{ 'products.product.unavailable' | t | escape }}"
+>
+  <div class="ao-page__inner">
+    {%- if t.show_back_link and back_url != blank -%}
+      <a class="ao-pdp__back" href="{{ back_url }}">
+        <span class="ao-pdp__back-arrow" aria-hidden="true"></span>
+        {{ back_label | default: 'RETURN TO EXHIBIT' }}
+      </a>
+    {%- endif -%}
+
+    <div class="ao-pdp__layout">
+      {%- comment -%} ---------------- Gallery ---------------- {%- endcomment -%}
+      <div class="ao-pdp__gallery">
+        <div class="ao-pdp__main">
+          {%- if product.featured_media != blank -%}
+            {%- capture main_alt -%}
+              {{- product.featured_media.alt | default: product.title | escape -}}
+            {%- endcapture -%}
+            {{
+              product.featured_media
+              | image_url: width: 1200
+              | image_tag:
+                class: 'ao-pdp__main-img',
+                widths: '400, 600, 800, 1000, 1200',
+                sizes: '(min-width: 990px) 528px, 100vw',
+                loading: 'eager',
+                alt: main_alt
+            }}
+          {%- else -%}
+            {{ 'product-apparel-2' | placeholder_svg_tag: 'ao-pdp__main-img' }}
+          {%- endif -%}
+        </div>
+
+        {%- if gallery_media.size > 1 -%}
+          <ul class="ao-pdp__thumbs" role="list">
+            {%- for media in gallery_media limit: t.thumbnails_to_show -%}
+              {%- capture full_src -%}{{ media | image_url: width: 1200 }}{%- endcapture -%}
+              {%- capture full_srcset -%}
+                {{ media | image_url: width: 600 }} 600w, {{ media | image_url: width: 1200 }} 1200w
+              {%- endcapture -%}
+              <li>
+                <button
+                  type="button"
+                  class="ao-pdp__thumb{% if forloop.first %} is-active{% endif %}"
+                  data-ao-thumb
+                  data-ao-media-id="{{ media.id }}"
+                  data-ao-full-src="{{ full_src }}"
+                  data-ao-full-srcset="{{ full_srcset | strip_newlines | strip }}"
+                  data-ao-alt="{{ media.alt | default: product.title | escape }}"
+                  aria-current="{% if forloop.first %}true{% else %}false{% endif %}"
+                  aria-label="{{ 'products.product.media.gallery_viewer' | t }} {{ forloop.index }}"
+                >
+                  {{
+                    media
+                    | image_url: width: 300
+                    | image_tag:
+                      class: 'ao-pdp__thumb-img',
+                      widths: '110, 220, 300',
+                      sizes: '111px',
+                      loading: 'lazy',
+                      alt: media.alt | default: product.title | escape
+                  }}
+                </button>
+              </li>
+            {%- endfor -%}
+          </ul>
+        {%- endif -%}
+      </div>
+
+      {%- comment -%} ---------------- Details ---------------- {%- endcomment -%}
+      <div class="ao-pdp__details">
+        {%- if t.show_title -%}
+          <div class="ao-pdp__headline">
+            <h1 class="ao-pdp__title">{{ product.title }}</h1>
+            {%- if product.type != blank -%}
+              <p class="ao-pdp__type">{{ product.type }}</p>
+            {%- endif -%}
+          </div>
+        {%- endif -%}
+
+        {%- if banner != blank -%}
+          <div class="ao-pdp__banner">
+            {{
+              banner
+              | image_url: width: 1200
+              | image_tag:
+                class: 'ao-pdp__banner-img',
+                widths: '400, 600, 800, 1200',
+                sizes: '(min-width: 990px) 528px, 100vw',
+                loading: 'lazy',
+                alt: product.title | escape
+            }}
+          </div>
+        {%- endif -%}
+
+        <p class="ao-pdp__price">
+          <span class="ao-pdp__price-compare" data-ao-compare-price
+            {% unless current.compare_at_price > current.price %}hidden{% endunless %}
+          >
+            {{- current.compare_at_price | money_with_currency -}}
+          </span>
+          <span data-ao-price>{{ current.price | money_with_currency }}</span>
+        </p>
+
+        {%- comment -%} Variant pickers — one select per product option {%- endcomment -%}
+        {%- unless product.has_only_default_variant -%}
+          <div class="ao-pdp__options">
+            {%- for option in product.options_with_values -%}
+              <div class="ao-pdp__option">
+                <label class="ao-pdp__option-label" for="ao-option-{{ section.id }}-{{ forloop.index0 }}">
+                  {{ option.name | upcase }}
+                </label>
+                <select
+                  id="ao-option-{{ section.id }}-{{ forloop.index0 }}"
+                  class="ao-field__select ao-pdp__option-select"
+                  data-ao-option-index="{{ forloop.index0 }}"
+                >
+                  {%- for value in option.values -%}
+                    <option value="{{ value | escape }}" {% if option.selected_value == value %}selected{% endif %}>
+                      {{ value }}
+                    </option>
+                  {%- endfor -%}
+                </select>
+              </div>
+            {%- endfor -%}
+          </div>
+        {%- endunless -%}
+
+        {%- comment -%} Availability line + notify-me disclosure {%- endcomment -%}
+        <div class="ao-pdp__status">
+          {%- liquid
+            assign show_availability = false
+            if t.availability_note != blank and current.available == false
+              assign show_availability = true
+            endif
+          -%}
+          <p class="ao-pdp__availability" data-ao-availability {% unless show_availability %}hidden{% endunless %}>
+            {%- if show_availability %}{{ t.availability_note }}{% endif -%}
+          </p>
+
+          {%- if t.show_notify -%}
+            <div class="ao-pdp__notify" data-ao-notify {% if current.available %}hidden{% endif %}>
+              <button
+                type="button"
+                class="ao-pdp__notify-toggle"
+                data-ao-notify-toggle
+                aria-expanded="false"
+                aria-controls="ao-notify-{{ section.id }}"
+              >
+                {{ t.notify_label | default: 'Notify Me' }}
+                <span class="ao-pdp__back-arrow ao-pdp__back-arrow--right" aria-hidden="true"></span>
+              </button>
+
+              <div class="ao-pdp__notify-panel" id="ao-notify-{{ section.id }}" data-ao-notify-panel hidden>
+                {%- form 'customer', id: notify_form_id, class: 'ao-pdp__notify-form' -%}
+                  <input type="hidden" name="contact[tags]" value="notify-me, {{ product.handle }}">
+                  <label class="visually-hidden" for="ao-notify-email-{{ section.id }}">
+                    {{ 'newsletter.label' | t }}
+                  </label>
+                  <input
+                    id="ao-notify-email-{{ section.id }}"
+                    class="ao-field__input"
+                    type="email"
+                    name="contact[email]"
+                    placeholder="{{ 'newsletter.label' | t }}"
+                    autocomplete="email"
+                    required
+                  >
+                  <button type="submit" class="ao-btn ao-btn--outline">
+                    {{ t.notify_submit_label | default: 'NOTIFY ME' }}
+                  </button>
+                  {%- if form.posted_successfully? -%}
+                    <p class="ao-form__message ao-form__message--success">
+                      {{ t.notify_success | default: 'You are on the list.' }}
+                    </p>
+                  {%- elsif form.errors -%}
+                    <p class="ao-form__message ao-form__message--error">
+                      {{ form.errors.translated_fields.email | capitalize }} {{ form.errors.messages.email }}
+                    </p>
+                  {%- endif -%}
+                {%- endform -%}
+              </div>
+            </div>
+          {%- endif -%}
+        </div>
+
+        {%- comment -%} ---------------- Buy buttons ---------------- {%- endcomment -%}
+        {%- form 'product', product, id: product_form_id, class: 'ao-pdp__form', data-ao-product-form: 'true' -%}
+          <input type="hidden" name="id" value="{{ current.id }}" data-ao-variant-id>
+          <input type="hidden" name="quantity" value="1">
+
+          <button
+            type="submit"
+            name="add"
+            class="ao-btn ao-btn--light ao-btn--full"
+            data-ao-add-to-cart
+            {% unless current.available %}disabled{% endunless %}
+          >
+            {%- if current.available -%}
+              {{ 'products.product.add_to_cart' | t }}
+            {%- else -%}
+              {{ 'products.product.sold_out' | t }}
+            {%- endif -%}
+          </button>
+
+          {%- if t.show_dynamic_checkout -%}
+            <div class="ao-pdp__dynamic">{{ form | payment_button }}</div>
+          {%- endif -%}
+        {%- endform -%}
+
+        {%- if t.shipping_note != blank -%}
+          <p class="ao-form__note">{{ t.shipping_note }}</p>
+        {%- endif -%}
+
+        {%- comment -%} ---------------- Description ---------------- {%- endcomment -%}
+        {%- if product.description != blank -%}
+          <div class="ao-pdp__description">
+            <h2 class="ao-pdp__section-heading">{{ t.description_heading | default: 'DESCRIPTION' }}</h2>
+            <div class="ao-pdp__description-body rte">{{ product.description }}</div>
+          </div>
+        {%- endif -%}
+
+        {%- comment -%} Optional extra panels — care, sizing, authenticity… {%- endcomment -%}
+        {%- for block in section.blocks -%}
+          {%- case block.type -%}
+            {%- when 'text' -%}
+              <div class="ao-pdp__description" {{ block.shopify_attributes }}>
+                {%- if block.settings.heading != blank -%}
+                  <h2 class="ao-pdp__section-heading">{{ block.settings.heading }}</h2>
+                {%- endif -%}
+                <div class="ao-pdp__description-body rte">{{ block.settings.text }}</div>
+              </div>
+
+            {%- when 'collapsible' -%}
+              <details class="ao-pdp__collapsible" {{ block.shopify_attributes }}>
+                <summary class="ao-pdp__collapsible-q">
+                  <span>{{ block.settings.heading }}</span>
+                  <span class="ao-pdp__collapsible-icon" aria-hidden="true"></span>
+                </summary>
+                <div class="ao-pdp__description-body rte">{{ block.settings.text }}</div>
+              </details>
+          {%- endcase -%}
+        {%- endfor -%}
+      </div>
+    </div>
+  </div>
+
+  {%- comment -%} Variant data for the script, including a per-variant availability note. {%- endcomment -%}
+  <script type="application/json" data-ao-variant-data>
+    [
+      {%- for variant in product.variants -%}
+        {%- liquid
+          # Only unavailable variants carry the "coming soon" note.
+          assign variant_note = ''
+          unless variant.available
+            assign variant_note = t.availability_note
+          endunless
+        -%}
+        {
+          "id": {{ variant.id | json }},
+          "options": {{ variant.options | json }},
+          "available": {{ variant.available | json }},
+          "price": {{ variant.price | money_with_currency | json }},
+          "price_raw": {{ variant.price | json }},
+          "compare_at_price": {{ variant.compare_at_price | money_with_currency | json }},
+          "compare_at_price_raw": {{ variant.compare_at_price | default: 0 | json }},
+          "featured_media_id": {{ variant.featured_media.id | json }},
+          "availability_note": {{ variant_note | json }}
+        }{% unless forloop.last %},{% endunless %}
+      {%- endfor -%}
+    ]
+  </script>
+</div>
+
+{% stylesheet %}
+.ao-pdp__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 40px;
+  color: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+.ao-pdp__back:hover { color: var(--ao-page-accent); }
+.ao-pdp__back-arrow {
+  width: 8px;
+  height: 8px;
+  border-left: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+}
+.ao-pdp__back-arrow--right { transform: rotate(-135deg); }
+
+.ao-pdp__layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 40px;
+}
+
+/* Gallery */
+.ao-pdp__main {
+  overflow: hidden;
+  border-radius: var(--ao-radius, 8px);
+  background: var(--ao-surface-2);
+  aspect-ratio: 1 / 1;
+}
+.ao-pdp__main-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ao-pdp__thumbs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.ao-pdp__thumb {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: var(--ao-radius, 8px);
+  background: none;
+  cursor: pointer;
+  overflow: hidden;
+  aspect-ratio: 1 / 1;
+}
+.ao-pdp__thumb.is-active { border-color: var(--ao-page-accent); }
+.ao-pdp__thumb-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Details column */
+.ao-pdp__details {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.ao-pdp__headline {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ao-pdp__title {
+  margin: 0;
+  font-family: var(--ao-h);
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+.ao-pdp__type {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0.85;
+}
+.ao-pdp__banner {
+  overflow: hidden;
+  border-radius: var(--ao-radius, 8px);
+}
+.ao-pdp__banner-img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.ao-pdp__price {
+  margin: 0;
+  font-family: var(--ao-h);
+  font-size: 22px;
+  font-weight: 700;
+}
+.ao-pdp__price-compare {
+  margin-inline-end: 12px;
+  font-weight: 600;
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.ao-pdp__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+.ao-pdp__option {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ao-pdp__option-label {
+  font-size: 16px;
+  font-weight: 600;
+}
+.ao-pdp__option-select {
+  min-width: 140px;
+  padding: 8px 44px 8px 12px;
+  background-color: var(--ao-surface-2);
+  color: var(--ao-page-fg);
+  font-family: var(--ao-h);
+  font-size: 16px;
+  font-weight: 700;
+  background-image: linear-gradient(45deg, transparent 50%, #ffffff 50%),
+    linear-gradient(135deg, #ffffff 50%, transparent 50%);
+}
+.ao-pdp__option-select option {
+  background: var(--ao-surface-2);
+  color: var(--ao-page-fg);
+}
+
+.ao-pdp__status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.ao-pdp__availability {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+.ao-pdp__notify-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ao-page-accent);
+  font-family: var(--ao-b);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ao-pdp__notify-panel { width: 100%; }
+.ao-pdp__notify-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 12px 0 0;
+}
+.ao-pdp__notify-form .ao-field__input { flex: 1 1 200px; }
+
+.ao-pdp__form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 0;
+}
+.ao-pdp__dynamic .shopify-payment-button__button--unbranded {
+  border-radius: var(--ao-radius, 8px);
+  background: var(--ao-page-accent);
+  color: var(--ao-off-white, #fafafa);
+  font-family: var(--ao-b);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.ao-pdp__section-heading {
+  margin: 0 0 16px;
+  font-family: var(--ao-h);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+.ao-pdp__description-body {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.ao-pdp__description-body > :first-child { margin-top: 0; }
+.ao-pdp__description-body > :last-child { margin-bottom: 0; }
+.ao-pdp__description-body a { color: var(--ao-page-accent); }
+
+.ao-pdp__collapsible {
+  border-top: 1px solid rgba(250, 250, 250, 0.24);
+}
+.ao-pdp__collapsible:last-of-type {
+  border-bottom: 1px solid rgba(250, 250, 250, 0.24);
+}
+.ao-pdp__collapsible-q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 0;
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--ao-h);
+  font-size: 18px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.ao-pdp__collapsible-q::-webkit-details-marker { display: none; }
+.ao-pdp__collapsible-icon {
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.2s ease;
+}
+.ao-pdp__collapsible[open] .ao-pdp__collapsible-icon { transform: rotate(-135deg); }
+.ao-pdp__collapsible .ao-pdp__description-body { padding-bottom: 20px; }
+
+@media screen and (min-width: 990px) {
+  .ao-pdp__layout {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 64px;
+    align-items: start;
+  }
+  .ao-pdp__details { gap: 32px; }
+  .ao-pdp__title { font-size: 36px; }
+  .ao-pdp__price { font-size: 24px; }
+  .ao-pdp__section-heading { font-size: 24px; }
+}
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "AO Product",
+  "tag": "section",
+  "class": "ao-pdp-section",
+  "settings": [
+    { "type": "header", "content": "Back link" },
+    { "type": "checkbox", "id": "show_back_link", "label": "Show back link", "default": true },
+    { "type": "text", "id": "back_label", "label": "Back label", "default": "RETURN TO EXHIBIT" },
+    { "type": "url", "id": "back_link", "label": "Fallback back link", "info": "Used when the shopper did not arrive from a collection." },
+    { "type": "checkbox", "id": "back_label_use_collection", "label": "Use the collection name in the back label", "default": true },
+
+    { "type": "header", "content": "Gallery" },
+    { "type": "range", "id": "thumbnails_to_show", "min": 2, "max": 8, "step": 1, "label": "Thumbnails to show", "default": 4 },
+
+    { "type": "header", "content": "Details" },
+    { "type": "checkbox", "id": "show_title", "label": "Show product title", "default": true },
+    { "type": "text", "id": "description_heading", "label": "Description heading", "default": "DESCRIPTION" },
+    { "type": "text", "id": "shipping_note", "label": "Note under the buy buttons", "default": "Shipping calculated at checkout." },
+    { "type": "checkbox", "id": "show_dynamic_checkout", "label": "Show dynamic checkout button", "default": true },
+
+    { "type": "header", "content": "Editorial banner" },
+    { "type": "text", "id": "banner_metafield_namespace", "label": "Banner metafield namespace", "default": "custom" },
+    { "type": "text", "id": "banner_metafield_key", "label": "Banner metafield key", "default": "pdp_banner", "info": "An image metafield on the product, shown above the variant pickers." },
+
+    { "type": "header", "content": "Availability" },
+    { "type": "text", "id": "availability_note", "label": "Note shown when a variant is unavailable", "default": "Coming soon." },
+    { "type": "checkbox", "id": "show_notify", "label": "Show \"notify me\"", "default": true },
+    { "type": "text", "id": "notify_label", "label": "\"Notify me\" label", "default": "Notify Me" },
+    { "type": "text", "id": "notify_submit_label", "label": "\"Notify me\" submit label", "default": "NOTIFY ME" },
+    { "type": "text", "id": "notify_success", "label": "\"Notify me\" success message", "default": "You are on the list." },
+
+    { "type": "header", "content": "Colors" },
+    { "type": "color", "id": "background_color", "label": "Background", "default": "#000000" },
+    { "type": "color", "id": "text_color", "label": "Text", "default": "#ffffff" },
+    { "type": "color", "id": "accent_color", "label": "Accent", "default": "#ed117c" },
+
+    { "type": "header", "content": "Typography" },
+    { "type": "font_picker", "id": "heading_font", "label": "Heading font", "default": "montserrat_n7" },
+    { "type": "font_picker", "id": "body_font", "label": "Body font", "default": "noto_sans_n4" },
+
+    { "type": "header", "content": "Layout" },
+    { "type": "range", "id": "content_max_width", "min": 600, "max": 1440, "step": 20, "unit": "px", "label": "Content max width", "default": 1120 },
+    { "type": "range", "id": "padding_top", "min": 0, "max": 200, "step": 4, "unit": "px", "label": "Padding top (desktop)", "default": 72 },
+    { "type": "range", "id": "padding_bottom", "min": 0, "max": 200, "step": 4, "unit": "px", "label": "Padding bottom (desktop)", "default": 96 },
+    { "type": "range", "id": "padding_top_mobile", "min": 0, "max": 160, "step": 4, "unit": "px", "label": "Padding top (mobile)", "default": 48 },
+    { "type": "range", "id": "padding_bottom_mobile", "min": 0, "max": 160, "step": 4, "unit": "px", "label": "Padding bottom (mobile)", "default": 64 }
+  ],
+  "blocks": [
+    {
+      "type": "text",
+      "name": "Text panel",
+      "settings": [
+        { "type": "text", "id": "heading", "label": "Heading", "default": "DETAILS" },
+        { "type": "richtext", "id": "text", "label": "Text", "default": "<p>Share the details of this product.</p>" }
+      ]
+    },
+    {
+      "type": "collapsible",
+      "name": "Collapsible panel",
+      "settings": [
+        { "type": "text", "id": "heading", "label": "Heading", "default": "CARE" },
+        { "type": "richtext", "id": "text", "label": "Text", "default": "<p>Care instructions.</p>" }
+      ]
+    }
+  ],
+  "presets": [
+    { "name": "AO Product" }
+  ]
+}
+{% endschema %}

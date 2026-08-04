@@ -1,0 +1,38 @@
+{
+  "sections": {
+    "main": {
+      "type": "ao-collection-list",
+      "blocks": {
+        "fragrances": {
+          "type": "row",
+          "settings": { "heading": "FRAGRANCES", "link_heading": true, "products_to_show": 9, "show_view_all": true, "view_all_label": "VIEW ALL" }
+        },
+        "candles": {
+          "type": "row",
+          "settings": { "heading": "CANDLES", "link_heading": true, "products_to_show": 9, "show_view_all": true, "view_all_label": "VIEW ALL" }
+        }
+      },
+      "block_order": ["fragrances", "candles"],
+      "settings": {
+        "show_crest": true,
+        "crest_width": 137,
+        "crest_width_mobile": 77,
+        "tagline": "FRAGRANCE FOR A MATURE AUDIENCE",
+        "title": "AROMA ROOM",
+        "show_product_count": true,
+        "card_subtitle": "type",
+        "background_color": "#000000",
+        "text_color": "#ffffff",
+        "accent_color": "#ed117c",
+        "heading_font": "montserrat_n7",
+        "body_font": "noto_sans_n4",
+        "content_max_width": 1120,
+        "padding_top": 128,
+        "padding_bottom": 96,
+        "padding_top_mobile": 96,
+        "padding_bottom_mobile": 64
+      }
+    }
+  },
+  "order": ["main"]
+}

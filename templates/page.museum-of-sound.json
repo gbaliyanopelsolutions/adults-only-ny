@@ -1,0 +1,45 @@
+{
+  "sections": {
+    "main": {
+      "type": "ao-sound",
+      "blocks": {
+        "track-1": {
+          "type": "track",
+          "settings": { "title": "Product Name", "subtitle": "Collection", "link_label": "Listen", "link_new_tab": true }
+        },
+        "track-2": {
+          "type": "track",
+          "settings": { "title": "Product Name", "subtitle": "Collection", "link_label": "Listen", "link_new_tab": true }
+        },
+        "track-3": {
+          "type": "track",
+          "settings": { "title": "Product Name", "subtitle": "Collection", "link_label": "Listen", "link_new_tab": true }
+        },
+        "track-4": {
+          "type": "track",
+          "settings": { "title": "Product Name", "subtitle": "Collection", "link_label": "Listen", "link_new_tab": true }
+        }
+      },
+      "block_order": ["track-1", "track-2", "track-3", "track-4"],
+      "settings": {
+        "show_crest": true,
+        "crest_width": 137,
+        "crest_width_mobile": 77,
+        "tagline": "CURATED FREQUENCIES",
+        "title": "MUSEUM OF SOUND",
+        "empty_text": "The frequencies are being curated.",
+        "background_color": "#000000",
+        "text_color": "#ffffff",
+        "accent_color": "#ed117c",
+        "heading_font": "montserrat_n7",
+        "body_font": "noto_sans_n4",
+        "content_max_width": 1120,
+        "padding_top": 128,
+        "padding_bottom": 96,
+        "padding_top_mobile": 96,
+        "padding_bottom_mobile": 64
+      }
+    }
+  },
+  "order": ["main"]
+}

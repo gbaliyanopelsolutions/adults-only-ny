@@ -1,0 +1,58 @@
+{%- comment -%}
+  Renders the AO page masthead: crest, tagline, page title and intro copy.
+
+  Every designed AO page opens with some subset of these four parts, so they
+  live in one snippet rather than being copy-pasted into ten sections.
+
+  Accepts:
+  - show_crest: boolean
+  - crest: image (optional — falls back to the bundled ao-logo.svg lockup)
+  - crest_width: number, used for the alt text sizing hint
+  - tagline: string, uppercase kicker above the title
+  - title: string, rendered as the page <h1>
+  - body: string/richtext, intro copy under the title
+  - align: 'center' (default) or 'left'
+  - heading_tag: defaults to 'h1'
+
+  Usage:
+  {% render 'ao-masthead', show_crest: true, crest: settings.crest, title: page.title %}
+{%- endcomment -%}
+
+{%- liquid
+  assign ao_align = align | default: 'center'
+  assign ao_heading_tag = heading_tag | default: 'h1'
+-%}
+
+{%- if show_crest or tagline != blank or title != blank or body != blank -%}
+  <div class="ao-masthead{% if ao_align == 'left' %} ao-masthead--left{% endif %}">
+    {%- if show_crest -%}
+      {%- if crest != blank -%}
+        {%- capture crest_sizes -%}{{ crest_width | default: 137 }}px{%- endcapture -%}
+        {{
+          crest
+          | image_url: width: 600
+          | image_tag:
+            class: 'ao-masthead__crest',
+            widths: '160, 240, 320, 480, 600',
+            sizes: crest_sizes,
+            alt: shop.name,
+            loading: 'eager'
+        }}
+      {%- else -%}
+        <span class="ao-masthead__crest">{{- 'ao-logo.svg' | inline_asset_content -}}</span>
+      {%- endif -%}
+    {%- endif -%}
+
+    {%- if tagline != blank -%}
+      <p class="ao-masthead__tagline">{{ tagline }}</p>
+    {%- endif -%}
+
+    {%- if title != blank -%}
+      <{{ ao_heading_tag }} class="ao-masthead__title">{{ title }}</{{ ao_heading_tag }}>
+    {%- endif -%}
+
+    {%- if body != blank -%}
+      <div class="ao-masthead__body rte">{{ body }}</div>
+    {%- endif -%}
+  </div>
+{%- endif -%}

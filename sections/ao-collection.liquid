@@ -1,0 +1,372 @@
+{{ 'ao-base.css' | asset_url | stylesheet_tag }}
+{{ 'ao-pages.css' | asset_url | stylesheet_tag }}
+
+{%- liquid
+  assign t = section.settings
+
+  # Title and intro fall back to the collection's own fields so merchants
+  # maintain the copy in the collection editor, not in the theme.
+  assign heading = t.title_override
+  if heading == blank
+    assign heading = collection.title
+  endif
+
+  assign intro = t.body_override
+  if intro == blank and t.show_collection_description
+    assign intro = collection.description
+  endif
+
+  assign products_per_page = t.products_per_page
+-%}
+
+{% render 'ao-page-style', section: section %}
+
+<div id="ao-{{ section.id }}" class="ao-page ao-collection">
+  <div class="ao-page__inner">
+    {% render 'ao-masthead',
+      show_crest: t.show_crest,
+      crest: t.crest,
+      crest_width: t.crest_width,
+      tagline: t.tagline,
+      title: heading,
+      body: intro
+    %}
+
+    {%- paginate collection.products by products_per_page -%}
+      <div class="ao-collection__body">
+        {%- if t.show_toolbar -%}
+          <div class="ao-toolbar">
+            {%- if t.show_product_count -%}
+              <p class="ao-toolbar__count">
+                {{ 'products.facets.product_count_simple' | t: count: collection.products_count }}
+              </p>
+            {%- else -%}
+              <span></span>
+            {%- endif -%}
+
+            <div class="ao-toolbar__actions">
+              {%- if t.show_sort and collection.sort_options.size > 0 -%}
+                {%- comment -%}
+                  A plain GET form so sorting works with JavaScript disabled;
+                  the inline script just auto-submits for everyone else.
+                {%- endcomment -%}
+                <form method="get" action="{{ collection.url }}" class="ao-collection__sort">
+                  <label class="visually-hidden" for="ao-sort-{{ section.id }}">
+                    {{ 'products.facets.sort_by_label' | t }}
+                  </label>
+                  <select
+                    id="ao-sort-{{ section.id }}"
+                    class="ao-pill"
+                    name="sort_by"
+                    onchange="this.form.submit()"
+                  >
+                    {%- assign current_sort = collection.sort_by | default: collection.default_sort_by -%}
+                    {%- for option in collection.sort_options -%}
+                      <option
+                        value="{{ option.value }}"
+                        {% if option.value == current_sort %}selected{% endif %}
+                      >
+                        {{ 'products.facets.sort_by_label' | t }} {{ option.name }}
+                      </option>
+                    {%- endfor -%}
+                  </select>
+                  {%- comment -%} Keep any active filters when the sort changes. {%- endcomment -%}
+                  {%- for filter in collection.filters -%}
+                    {%- for value in filter.active_values -%}
+                      <input type="hidden" name="{{ value.param_name }}" value="{{ value.value | escape }}">
+                    {%- endfor -%}
+                  {%- endfor -%}
+                  <noscript>
+                    <button type="submit" class="ao-pill">{{ 'products.facets.apply' | t }}</button>
+                  </noscript>
+                </form>
+              {%- endif -%}
+
+              {%- if t.show_filters and collection.filters.size > 0 -%}
+                <button
+                  type="button"
+                  class="ao-pill"
+                  aria-expanded="false"
+                  aria-controls="ao-filters-{{ section.id }}"
+                  data-ao-filter-toggle
+                >
+                  {{ 'products.facets.filter_button' | t }}
+                </button>
+              {%- endif -%}
+            </div>
+          </div>
+
+          {%- if t.show_filters and collection.filters.size > 0 -%}
+            <form
+              id="ao-filters-{{ section.id }}"
+              class="ao-filters"
+              method="get"
+              action="{{ collection.url }}"
+              hidden
+            >
+              {%- if collection.sort_by != blank -%}
+                <input type="hidden" name="sort_by" value="{{ collection.sort_by | escape }}">
+              {%- endif -%}
+
+              {%- for filter in collection.filters -%}
+                <fieldset class="ao-filters__group">
+                  <legend class="ao-filters__legend">{{ filter.label }}</legend>
+
+                  {%- case filter.type -%}
+                    {%- when 'price_range' -%}
+                      <div class="ao-filters__range">
+                        <label class="ao-filters__range-label" for="ao-{{ section.id }}-{{ filter.min_value.param_name }}">
+                          {{ 'products.facets.from' | t }}
+                        </label>
+                        <input
+                          id="ao-{{ section.id }}-{{ filter.min_value.param_name }}"
+                          class="ao-field__input"
+                          type="number"
+                          inputmode="decimal"
+                          name="{{ filter.min_value.param_name }}"
+                          value="{{ filter.min_value.value }}"
+                          min="0"
+                          max="{{ filter.range_max | money_without_currency | replace: ',', '' }}"
+                        >
+                        <label class="ao-filters__range-label" for="ao-{{ section.id }}-{{ filter.max_value.param_name }}">
+                          {{ 'products.facets.to' | t }}
+                        </label>
+                        <input
+                          id="ao-{{ section.id }}-{{ filter.max_value.param_name }}"
+                          class="ao-field__input"
+                          type="number"
+                          inputmode="decimal"
+                          name="{{ filter.max_value.param_name }}"
+                          value="{{ filter.max_value.value }}"
+                          min="0"
+                          max="{{ filter.range_max | money_without_currency | replace: ',', '' }}"
+                        >
+                      </div>
+
+                    {%- else -%}
+                      <ul class="ao-filters__list">
+                        {%- for value in filter.values -%}
+                          <li>
+                            <label class="ao-filters__option{% if value.count == 0 and value.active == false %} ao-filters__option--disabled{% endif %}">
+                              <input
+                                type="checkbox"
+                                name="{{ value.param_name }}"
+                                value="{{ value.value | escape }}"
+                                {% if value.active %}checked{% endif %}
+                                {% if value.count == 0 and value.active == false %}disabled{% endif %}
+                              >
+                              <span>{{ value.label }} ({{ value.count }})</span>
+                            </label>
+                          </li>
+                        {%- endfor -%}
+                      </ul>
+                  {%- endcase -%}
+                </fieldset>
+              {%- endfor -%}
+
+              <div class="ao-filters__actions">
+                <button type="submit" class="ao-btn">{{ 'products.facets.apply' | t }}</button>
+                <a class="ao-btn ao-btn--ghost" href="{{ collection.url }}">{{ 'products.facets.clear_all' | t }}</a>
+              </div>
+            </form>
+          {%- endif -%}
+        {%- endif -%}
+
+        {%- if collection.products.size > 0 -%}
+          <ul class="ao-pgrid" role="list">
+            {%- for product in collection.products -%}
+              <li>
+                {% render 'ao-product-card',
+                  product: product,
+                  subtitle_source: t.card_subtitle,
+                  eager: forloop.first
+                %}
+              </li>
+            {%- endfor -%}
+          </ul>
+
+          {%- if paginate.pages > 1 -%}
+            <nav class="ao-pagination" role="navigation" aria-label="{{ 'general.pagination.label' | t }}">
+              {%- for part in paginate.parts -%}
+                {%- if part.is_link -%}
+                  <a
+                    class="ao-pagination__item"
+                    href="{{ part.url }}"
+                    aria-label="{{ 'general.pagination.page' | t: number: part.title }}"
+                  >
+                    {{- part.title -}}
+                  </a>
+                {%- elsif part.title == paginate.current_page -%}
+                  <span class="ao-pagination__item" aria-current="page">{{ part.title }}</span>
+                {%- else -%}
+                  <span class="ao-pagination__item">{{ part.title }}</span>
+                {%- endif -%}
+              {%- endfor -%}
+            </nav>
+          {%- endif -%}
+        {%- else -%}
+          <p class="ao-empty">{{ t.empty_text | default: 'Nothing on display here yet.' }}</p>
+        {%- endif -%}
+      </div>
+    {%- endpaginate -%}
+  </div>
+</div>
+
+{%- if t.show_filters -%}
+  <script>
+    // Filters live in a plain <form> that starts hidden; the pill toggles it.
+    (function () {
+      var root = document.getElementById('ao-{{ section.id }}');
+      if (!root) return;
+      var toggle = root.querySelector('[data-ao-filter-toggle]');
+      var panel = document.getElementById('ao-filters-{{ section.id }}');
+      if (!toggle || !panel) return;
+      toggle.addEventListener('click', function () {
+        var open = toggle.getAttribute('aria-expanded') === 'true';
+        toggle.setAttribute('aria-expanded', String(!open));
+        panel.hidden = open;
+      });
+    })();
+  </script>
+{%- endif -%}
+
+{% stylesheet %}
+.ao-collection__body {
+  margin-top: 40px;
+}
+
+.ao-filters {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  margin-bottom: 40px;
+  padding: 24px;
+  border-radius: 16px;
+  background: var(--ao-surface);
+}
+.ao-filters__group {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.ao-filters__legend {
+  padding: 0 0 12px;
+  font-family: var(--ao-h);
+  font-size: 18px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.ao-filters__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ao-filters__option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ao-filters__option--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.ao-filters__range {
+  display: grid;
+  grid-template-columns: auto 1fr auto 1fr;
+  align-items: center;
+  gap: 8px;
+}
+.ao-filters__range-label {
+  font-size: 14px;
+  font-weight: 600;
+}
+.ao-filters__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.ao-filters__actions .ao-btn {
+  flex: 1 1 160px;
+}
+
+.ao-collection__sort {
+  margin: 0;
+}
+
+@media screen and (min-width: 750px) {
+  .ao-filters {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 32px;
+  }
+  .ao-filters__actions {
+    grid-column: 1 / -1;
+  }
+}
+
+@media screen and (min-width: 990px) {
+  .ao-collection__body {
+    margin-top: 56px;
+  }
+}
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "AO Collection",
+  "tag": "section",
+  "class": "ao-collection-section",
+  "settings": [
+    { "type": "header", "content": "Masthead" },
+    { "type": "checkbox", "id": "show_crest", "label": "Show crest", "default": true },
+    { "type": "image_picker", "id": "crest", "label": "Crest image", "info": "Leave blank to use the bundled AO lockup." },
+    { "type": "range", "id": "crest_width", "min": 60, "max": 200, "step": 1, "unit": "px", "label": "Crest width (desktop)", "default": 137 },
+    { "type": "range", "id": "crest_width_mobile", "min": 40, "max": 140, "step": 1, "unit": "px", "label": "Crest width (mobile)", "default": 77 },
+    { "type": "text", "id": "tagline", "label": "Tagline", "info": "Uppercase kicker above the collection title." },
+    { "type": "text", "id": "title_override", "label": "Title override", "info": "Leave blank to use the collection title." },
+    { "type": "richtext", "id": "body_override", "label": "Intro override" },
+    { "type": "checkbox", "id": "show_collection_description", "label": "Use the collection description as intro copy", "default": false },
+
+    { "type": "header", "content": "Grid" },
+    { "type": "range", "id": "products_per_page", "min": 6, "max": 48, "step": 3, "label": "Products per page", "default": 24 },
+    { "type": "select", "id": "card_subtitle", "label": "Card subtitle", "default": "type",
+      "options": [
+        { "value": "type", "label": "Product type" },
+        { "value": "vendor", "label": "Vendor" },
+        { "value": "none", "label": "None" }
+      ]
+    },
+    { "type": "text", "id": "empty_text", "label": "Empty collection message", "default": "Nothing on display here yet." },
+
+    { "type": "header", "content": "Toolbar" },
+    { "type": "checkbox", "id": "show_toolbar", "label": "Show toolbar", "default": true },
+    { "type": "checkbox", "id": "show_product_count", "label": "Show product count", "default": true },
+    { "type": "checkbox", "id": "show_sort", "label": "Show sort control", "default": true },
+    { "type": "checkbox", "id": "show_filters", "label": "Show filters", "info": "Filters come from the Search & Discovery app.", "default": true },
+
+    { "type": "header", "content": "Colors" },
+    { "type": "color", "id": "background_color", "label": "Background", "default": "#000000" },
+    { "type": "color", "id": "text_color", "label": "Text", "default": "#ffffff" },
+    { "type": "color", "id": "accent_color", "label": "Accent", "default": "#ed117c" },
+
+    { "type": "header", "content": "Typography" },
+    { "type": "font_picker", "id": "heading_font", "label": "Heading font", "default": "montserrat_n7" },
+    { "type": "font_picker", "id": "body_font", "label": "Body font", "default": "noto_sans_n4" },
+
+    { "type": "header", "content": "Layout" },
+    { "type": "range", "id": "content_max_width", "min": 600, "max": 1440, "step": 20, "unit": "px", "label": "Content max width", "default": 1120 },
+    { "type": "range", "id": "padding_top", "min": 0, "max": 200, "step": 4, "unit": "px", "label": "Padding top (desktop)", "default": 128 },
+    { "type": "range", "id": "padding_bottom", "min": 0, "max": 200, "step": 4, "unit": "px", "label": "Padding bottom (desktop)", "default": 96 },
+    { "type": "range", "id": "padding_top_mobile", "min": 0, "max": 160, "step": 4, "unit": "px", "label": "Padding top (mobile)", "default": 96 },
+    { "type": "range", "id": "padding_bottom_mobile", "min": 0, "max": 160, "step": 4, "unit": "px", "label": "Padding bottom (mobile)", "default": 64 }
+  ],
+  "presets": [
+    { "name": "AO Collection" }
+  ]
+}
+{% endschema %}

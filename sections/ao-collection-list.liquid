@@ -1,0 +1,223 @@
+{{ 'ao-base.css' | asset_url | stylesheet_tag }}
+{{ 'ao-pages.css' | asset_url | stylesheet_tag }}
+
+{%- comment -%}
+  The Exhibit and Aroma Room landings are one masthead followed by several
+  labelled product rows ("SELVEDGE DENIM", "CANVAS DENIM", "TOPS"…), each row
+  drawn from its own collection. Each block below is one of those rows.
+{%- endcomment -%}
+
+{%- liquid
+  assign t = section.settings
+
+  assign heading = t.title
+  if heading == blank and page.title != blank
+    assign heading = page.title
+  endif
+
+  # The count in the toolbar is the sum of every row, not a single collection.
+  assign total_products = 0
+  for block in section.blocks
+    if block.type == 'row'
+      assign row_collection = block.settings.collection
+      assign total_products = total_products | plus: row_collection.all_products_count
+    endif
+  endfor
+-%}
+
+{% render 'ao-page-style', section: section %}
+
+<div id="ao-{{ section.id }}" class="ao-page ao-clist">
+  <div class="ao-page__inner">
+    {% render 'ao-masthead',
+      show_crest: t.show_crest,
+      crest: t.crest,
+      crest_width: t.crest_width,
+      tagline: t.tagline,
+      title: heading,
+      body: t.body
+    %}
+
+    {%- if t.show_product_count and total_products > 0 -%}
+      <div class="ao-toolbar ao-clist__toolbar">
+        <p class="ao-toolbar__count">
+          {{ 'products.facets.product_count_simple' | t: count: total_products }}
+        </p>
+      </div>
+    {%- endif -%}
+
+    <div class="ao-clist__rows">
+      {%- for block in section.blocks -%}
+        {%- case block.type -%}
+
+          {%- when 'row' -%}
+            {%- liquid
+              assign row_collection = block.settings.collection
+              assign row_heading = block.settings.heading
+              if row_heading == blank
+                assign row_heading = row_collection.title
+              endif
+              assign row_limit = block.settings.products_to_show
+            -%}
+            {%- if row_collection.products.size > 0 -%}
+              <section class="ao-clist__row" {{ block.shopify_attributes }}>
+                {%- if row_heading != blank -%}
+                  {%- if block.settings.link_heading -%}
+                    <h2 class="ao-row-heading">
+                      <a class="ao-clist__row-link" href="{{ row_collection.url }}">{{ row_heading }}</a>
+                    </h2>
+                  {%- else -%}
+                    <h2 class="ao-row-heading">{{ row_heading }}</h2>
+                  {%- endif -%}
+                {%- endif -%}
+
+                <ul class="ao-pgrid" role="list">
+                  {%- for product in row_collection.products limit: row_limit -%}
+                    <li>
+                      {% render 'ao-product-card',
+                        product: product,
+                        subtitle_source: t.card_subtitle,
+                        eager: forloop.first
+                      %}
+                    </li>
+                  {%- endfor -%}
+                </ul>
+
+                {%- if block.settings.show_view_all and row_collection.all_products_count > row_limit -%}
+                  <div class="ao-clist__row-more">
+                    <a class="ao-btn ao-btn--outline" href="{{ row_collection.url }}">
+                      {{ block.settings.view_all_label | default: 'VIEW ALL' }}
+                    </a>
+                  </div>
+                {%- endif -%}
+              </section>
+            {%- endif -%}
+
+          {%- when 'text' -%}
+            <section class="ao-clist__row ao-clist__row--text" {{ block.shopify_attributes }}>
+              {%- if block.settings.heading != blank -%}
+                <h2 class="ao-row-heading">{{ block.settings.heading }}</h2>
+              {%- endif -%}
+              {%- if block.settings.text != blank -%}
+                <div class="ao-clist__text rte">{{ block.settings.text }}</div>
+              {%- endif -%}
+            </section>
+
+        {%- endcase -%}
+      {%- endfor -%}
+    </div>
+  </div>
+</div>
+
+{% stylesheet %}
+.ao-clist__toolbar {
+  margin-top: 40px;
+  margin-bottom: 0;
+}
+.ao-clist__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 80px;
+  margin-top: 40px;
+}
+.ao-clist__row-link {
+  color: inherit;
+  text-decoration: none;
+}
+.ao-clist__row-link:hover {
+  color: var(--ao-page-accent);
+}
+.ao-clist__row-more {
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
+}
+.ao-clist__text {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.ao-clist__text > :first-child { margin-top: 0; }
+.ao-clist__text > :last-child { margin-bottom: 0; }
+.ao-clist__text a { color: var(--ao-page-accent); }
+
+@media screen and (min-width: 990px) {
+  .ao-clist__rows {
+    gap: 120px;
+    margin-top: 56px;
+  }
+  .ao-clist__text { font-size: 20px; }
+}
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "AO Collection List",
+  "tag": "section",
+  "class": "ao-clist-section",
+  "settings": [
+    { "type": "header", "content": "Masthead" },
+    { "type": "checkbox", "id": "show_crest", "label": "Show crest", "default": true },
+    { "type": "image_picker", "id": "crest", "label": "Crest image", "info": "Leave blank to use the bundled AO lockup." },
+    { "type": "range", "id": "crest_width", "min": 60, "max": 200, "step": 1, "unit": "px", "label": "Crest width (desktop)", "default": 137 },
+    { "type": "range", "id": "crest_width_mobile", "min": 40, "max": 140, "step": 1, "unit": "px", "label": "Crest width (mobile)", "default": 77 },
+    { "type": "text", "id": "tagline", "label": "Tagline" },
+    { "type": "text", "id": "title", "label": "Title", "info": "Leave blank to use the page title." },
+    { "type": "richtext", "id": "body", "label": "Intro copy" },
+
+    { "type": "header", "content": "Rows" },
+    { "type": "checkbox", "id": "show_product_count", "label": "Show total product count", "default": true },
+    { "type": "select", "id": "card_subtitle", "label": "Card subtitle", "default": "type",
+      "options": [
+        { "value": "type", "label": "Product type" },
+        { "value": "vendor", "label": "Vendor" },
+        { "value": "none", "label": "None" }
+      ]
+    },
+
+    { "type": "header", "content": "Colors" },
+    { "type": "color", "id": "background_color", "label": "Background", "default": "#000000" },
+    { "type": "color", "id": "text_color", "label": "Text", "default": "#ffffff" },
+    { "type": "color", "id": "accent_color", "label": "Accent", "default": "#ed117c" },
+
+    { "type": "header", "content": "Typography" },
+    { "type": "font_picker", "id": "heading_font", "label": "Heading font", "default": "montserrat_n7" },
+    { "type": "font_picker", "id": "body_font", "label": "Body font", "default": "noto_sans_n4" },
+
+    { "type": "header", "content": "Layout" },
+    { "type": "range", "id": "content_max_width", "min": 600, "max": 1440, "step": 20, "unit": "px", "label": "Content max width", "default": 1120 },
+    { "type": "range", "id": "padding_top", "min": 0, "max": 200, "step": 4, "unit": "px", "label": "Padding top (desktop)", "default": 128 },
+    { "type": "range", "id": "padding_bottom", "min": 0, "max": 200, "step": 4, "unit": "px", "label": "Padding bottom (desktop)", "default": 96 },
+    { "type": "range", "id": "padding_top_mobile", "min": 0, "max": 160, "step": 4, "unit": "px", "label": "Padding top (mobile)", "default": 96 },
+    { "type": "range", "id": "padding_bottom_mobile", "min": 0, "max": 160, "step": 4, "unit": "px", "label": "Padding bottom (mobile)", "default": 64 }
+  ],
+  "blocks": [
+    {
+      "type": "row",
+      "name": "Collection row",
+      "settings": [
+        { "type": "collection", "id": "collection", "label": "Collection" },
+        { "type": "text", "id": "heading", "label": "Row heading", "info": "Leave blank to use the collection title." },
+        { "type": "checkbox", "id": "link_heading", "label": "Link the heading to the collection", "default": true },
+        { "type": "range", "id": "products_to_show", "min": 3, "max": 24, "step": 3, "label": "Products to show", "default": 9 },
+        { "type": "checkbox", "id": "show_view_all", "label": "Show \"view all\" button", "default": true },
+        { "type": "text", "id": "view_all_label", "label": "\"View all\" label", "default": "VIEW ALL" }
+      ]
+    },
+    {
+      "type": "text",
+      "name": "Text row",
+      "settings": [
+        { "type": "text", "id": "heading", "label": "Heading" },
+        { "type": "richtext", "id": "text", "label": "Text" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "AO Collection List",
+      "blocks": [{ "type": "row" }, { "type": "row" }]
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,346 @@
+{{ 'ao-base.css' | asset_url | stylesheet_tag }}
+{{ 'ao-pages.css' | asset_url | stylesheet_tag }}
+
+{%- comment -%}
+  My Purchases — the signed-in customer's order history as dark cards: order
+  number, the line items with thumbnail / size / price, a status strip, the
+  total in accent pink and a link through to the order.
+
+  Signed-out visitors get the login prompt instead, since there is nothing to
+  show them.
+{%- endcomment -%}
+
+{%- liquid
+  assign t = section.settings
+
+  assign heading = t.title
+  if heading == blank and page.title != blank
+    assign heading = page.title
+  endif
+-%}
+
+{% render 'ao-page-style', section: section %}
+
+<div id="ao-{{ section.id }}" class="ao-page ao-orders">
+  <div class="ao-page__inner">
+    {% render 'ao-masthead',
+      show_crest: t.show_crest,
+      crest: t.crest,
+      crest_width: t.crest_width,
+      tagline: t.tagline,
+      title: heading,
+      body: t.body
+    %}
+
+    {%- if customer -%}
+      {%- paginate customer.orders by t.orders_per_page -%}
+        {%- if customer.orders.size > 0 -%}
+          <div class="ao-orders__list">
+            {%- for order in customer.orders -%}
+              <article class="ao-orders__card">
+                <div class="ao-orders__head">
+                  <span class="ao-orders__label">{{ 'customer.orders.order_number' | t }}:</span>
+                  <span class="ao-orders__number">{{ order.name }}</span>
+                </div>
+
+                <ul class="ao-orders__items" role="list">
+                  {%- for line_item in order.line_items limit: t.line_items_to_show -%}
+                    <li class="ao-orders__item">
+                      <div class="ao-orders__item-media">
+                        {%- if line_item.image != blank -%}
+                          {{
+                            line_item.image
+                            | image_url: width: 240
+                            | image_tag:
+                              class: 'ao-orders__item-img',
+                              widths: '120, 240',
+                              sizes: '120px',
+                              loading: 'lazy',
+                              alt: line_item.title | escape
+                          }}
+                        {%- endif -%}
+                      </div>
+
+                      <div class="ao-orders__item-body">
+                        <div class="ao-orders__item-meta">
+                          <p class="ao-orders__item-title">{{ line_item.product.title | default: line_item.title }}</p>
+                          {%- if line_item.product.type != blank -%}
+                            <p class="ao-orders__item-sub">{{ line_item.product.type }}</p>
+                          {%- endif -%}
+                          {%- unless line_item.variant.title contains 'Default' -%}
+                            <p class="ao-orders__item-variant">{{ line_item.variant.title }}</p>
+                          {%- endunless -%}
+                        </div>
+                        <p class="ao-orders__item-price">{{ line_item.final_line_price | money }}</p>
+                      </div>
+                    </li>
+                  {%- endfor -%}
+                </ul>
+
+                <div class="ao-orders__status">
+                  <span>{{ 'customer.orders.fulfillment_status' | t }}: {{ order.fulfillment_status_label }}</span>
+                  <span>
+                    {{ 'products.facets.product_count_simple' | t: count: order.line_items.size }}
+                  </span>
+                </div>
+
+                <div class="ao-orders__total">
+                  <span class="ao-orders__label">{{ 'customer.orders.total' | t }}:</span>
+                  <span class="ao-orders__total-value">{{ order.total_price | money_with_currency }}</span>
+                </div>
+
+                <div class="ao-orders__action">
+                  <a class="ao-orders__view" href="{{ order.customer_url }}">
+                    {{ t.view_order_label | default: 'View Order' }}
+                  </a>
+                </div>
+              </article>
+            {%- endfor -%}
+          </div>
+
+          {%- if paginate.pages > 1 -%}
+            <nav class="ao-pagination" role="navigation" aria-label="{{ 'general.pagination.label' | t }}">
+              {%- for part in paginate.parts -%}
+                {%- if part.is_link -%}
+                  <a class="ao-pagination__item" href="{{ part.url }}">{{ part.title }}</a>
+                {%- elsif part.title == paginate.current_page -%}
+                  <span class="ao-pagination__item" aria-current="page">{{ part.title }}</span>
+                {%- else -%}
+                  <span class="ao-pagination__item">{{ part.title }}</span>
+                {%- endif -%}
+              {%- endfor -%}
+            </nav>
+          {%- endif -%}
+        {%- else -%}
+          <p class="ao-empty">{{ t.empty_text | default: 'You have not acquired anything yet.' }}</p>
+        {%- endif -%}
+      {%- endpaginate -%}
+
+      <div class="ao-orders__footer">
+        <a class="ao-btn ao-btn--outline" href="{{ routes.account_url }}">
+          {{ 'customer.account.title' | t }}
+        </a>
+        <a class="ao-btn ao-btn--ghost" href="{{ routes.account_logout_url }}">
+          {{ 'customer.log_out' | t }}
+        </a>
+      </div>
+    {%- else -%}
+      <div class="ao-orders__signed-out">
+        <p class="ao-orders__signed-out-copy">
+          {{ t.logged_out_text | default: 'Sign in to view your acquisitions.' }}
+        </p>
+        <div class="ao-orders__footer">
+          <a class="ao-btn" href="{{ routes.account_login_url }}">
+            {{ 'customer.log_in' | t }}
+          </a>
+          <a class="ao-btn ao-btn--outline" href="{{ routes.account_register_url }}">
+            {{ 'customer.register.title' | t }}
+          </a>
+        </div>
+      </div>
+    {%- endif -%}
+  </div>
+</div>
+
+{% stylesheet %}
+.ao-orders__list {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  margin-top: 40px;
+}
+.ao-orders__card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  border-radius: 16px;
+  background: var(--ao-surface);
+}
+.ao-orders__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.ao-orders__label {
+  font-size: 18px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.ao-orders__number {
+  font-size: 16px;
+  font-weight: 600;
+}
+.ao-orders__items {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ao-orders__item {
+  display: grid;
+  grid-template-columns: 88px 1fr;
+  align-items: center;
+  gap: 13px;
+  padding: 8px;
+  border-radius: var(--ao-radius, 8px);
+}
+.ao-orders__item-media {
+  overflow: hidden;
+  border-radius: var(--ao-radius, 8px);
+  background: var(--ao-surface-2);
+  aspect-ratio: 1 / 1;
+}
+.ao-orders__item-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ao-orders__item-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.ao-orders__item-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ao-orders__item-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.ao-orders__item-sub {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0.85;
+}
+.ao-orders__item-variant {
+  margin: 8px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.85;
+}
+.ao-orders__item-price {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.ao-orders__status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 8px;
+  border-radius: var(--ao-radius, 8px);
+  background: var(--ao-surface-2);
+  font-size: 16px;
+  font-weight: 600;
+}
+.ao-orders__total {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 16px;
+}
+.ao-orders__label + .ao-orders__total-value { margin: 0; }
+.ao-orders__total .ao-orders__label { font-size: 16px; }
+.ao-orders__total-value {
+  font-family: var(--ao-h);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ao-page-accent);
+}
+.ao-orders__action {
+  display: flex;
+  justify-content: flex-end;
+}
+.ao-orders__view {
+  color: var(--ao-muted);
+  font-size: 18px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.ao-orders__view:hover { color: var(--ao-page-accent); }
+
+.ao-orders__footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 48px;
+}
+.ao-orders__signed-out {
+  margin-top: 40px;
+  text-align: center;
+}
+.ao-orders__signed-out-copy {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+@media screen and (min-width: 750px) {
+  .ao-orders__card { padding: 32px 48px; gap: 24px; }
+  .ao-orders__item { grid-template-columns: 120px 1fr; }
+  .ao-orders__status { font-size: 20px; }
+  .ao-orders__total-value { font-size: 24px; }
+  .ao-orders__view { font-size: 20px; }
+}
+
+@media screen and (min-width: 990px) {
+  .ao-orders__list { margin-top: 56px; }
+}
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "AO My Purchases",
+  "tag": "section",
+  "class": "ao-orders-section",
+  "settings": [
+    { "type": "header", "content": "Masthead" },
+    { "type": "checkbox", "id": "show_crest", "label": "Show crest", "default": true },
+    { "type": "image_picker", "id": "crest", "label": "Crest image", "info": "Leave blank to use the bundled AO lockup." },
+    { "type": "range", "id": "crest_width", "min": 60, "max": 200, "step": 1, "unit": "px", "label": "Crest width (desktop)", "default": 137 },
+    { "type": "range", "id": "crest_width_mobile", "min": 40, "max": 140, "step": 1, "unit": "px", "label": "Crest width (mobile)", "default": 77 },
+    { "type": "text", "id": "tagline", "label": "Tagline" },
+    { "type": "text", "id": "title", "label": "Title", "info": "Leave blank to use the page title." },
+    { "type": "richtext", "id": "body", "label": "Intro copy" },
+
+    { "type": "header", "content": "Orders" },
+    { "type": "range", "id": "orders_per_page", "min": 3, "max": 30, "step": 1, "label": "Orders per page", "default": 10 },
+    { "type": "range", "id": "line_items_to_show", "min": 1, "max": 20, "step": 1, "label": "Line items per order", "default": 10 },
+    { "type": "text", "id": "view_order_label", "label": "\"View order\" label", "default": "View Order" },
+    { "type": "text", "id": "empty_text", "label": "No orders message", "default": "You have not acquired anything yet." },
+    { "type": "text", "id": "logged_out_text", "label": "Signed-out message", "default": "Sign in to view your acquisitions." },
+
+    { "type": "header", "content": "Colors" },
+    { "type": "color", "id": "background_color", "label": "Background", "default": "#000000" },
+    { "type": "color", "id": "text_color", "label": "Text", "default": "#ffffff" },
+    { "type": "color", "id": "accent_color", "label": "Accent", "default": "#ed117c" },
+
+    { "type": "header", "content": "Typography" },
+    { "type": "font_picker", "id": "heading_font", "label": "Heading font", "default": "montserrat_n7" },
+    { "type": "font_picker", "id": "body_font", "label": "Body font", "default": "noto_sans_n4" },
+
+    { "type": "header", "content": "Layout" },
+    { "type": "range", "id": "content_max_width", "min": 600, "max": 1440, "step": 20, "unit": "px", "label": "Content max width", "default": 1120 },
+    { "type": "range", "id": "padding_top", "min": 0, "max": 200, "step": 4, "unit": "px", "label": "Padding top (desktop)", "default": 128 },
+    { "type": "range", "id": "padding_bottom", "min": 0, "max": 200, "step": 4, "unit": "px", "label": "Padding bottom (desktop)", "default": 96 },
+    { "type": "range", "id": "padding_top_mobile", "min": 0, "max": 160, "step": 4, "unit": "px", "label": "Padding top (mobile)", "default": 96 },
+    { "type": "range", "id": "padding_bottom_mobile", "min": 0, "max": 160, "step": 4, "unit": "px", "label": "Padding bottom (mobile)", "default": 64 }
+  ],
+  "presets": [
+    { "name": "AO My Purchases" }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,73 @@
+{
+  "sections": {
+    "main": {
+      "type": "ao-form",
+      "blocks": {
+        "name": {
+          "type": "text",
+          "settings": {
+            "label": "NAME",
+            "name": "name",
+            "input_type": "text",
+            "placeholder": "Text...",
+            "required": true,
+            "full_width": false
+          }
+        },
+        "email": {
+          "type": "text",
+          "settings": {
+            "label": "EMAIL",
+            "name": "email",
+            "input_type": "email",
+            "placeholder": "Text...",
+            "required": true,
+            "full_width": false
+          }
+        },
+        "order": {
+          "type": "text",
+          "settings": {
+            "label": "ORDER NUMBER",
+            "name": "order",
+            "input_type": "text",
+            "placeholder": "Text...",
+            "full_width": true
+          }
+        },
+        "details": {
+          "type": "textarea",
+          "settings": {
+            "label": "VESSEL DETAILS",
+            "name": "body",
+            "placeholder": "Text Area...",
+            "hint": "Tell us which scent you would like and the current condition of your vessel."
+          }
+        }
+      },
+      "block_order": ["name", "email", "order", "details"],
+      "settings": {
+        "show_crest": false,
+        "title": "REFILL CUSTOMER SERVICE",
+        "body": "<p>Your Swarovski-embellished vessel is a one-of-one creation meant to be kept. We provide a proprietary scent refill customer service.</p>",
+        "footnote": "† To coordinate a $200.00 refill for your wood-wick coconut soy wax candle, please contact our concierge team. Note that we do not provide return shipping instructions at this time - TBA.",
+        "submit_label": "REQUEST REFILL",
+        "success_message": "Thank you — the concierge team will be in touch.",
+        "show_attach": true,
+        "attach_label": "ATTACH FILE",
+        "attach_note": "Please upload high-resolution photos or video of your vessel from all angles. This documentation is required to verify the current condition of your one-of-one piece.",
+        "background_color": "#000000",
+        "text_color": "#ffffff",
+        "accent_color": "#ed117c",
+        "heading_font": "montserrat_n7",
+        "body_font": "noto_sans_n4",
+        "content_max_width": 1200,
+        "padding_top": 96,
+        "padding_bottom": 96,
+        "padding_top_mobile": 64,
+        "padding_bottom_mobile": 64
+      }
+    }
+  },
+  "order": ["main"]
+}
